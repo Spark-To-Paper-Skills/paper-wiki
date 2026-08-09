@@ -71,7 +71,7 @@ function main() {
     }
 
     const url =
-      "https://raw.githubusercontent.com/u7079256/paper-wiki/main/VERSION";
+      "https://raw.githubusercontent.com/Spark-To-Paper-Skills/paper-wiki/main/VERSION";
     const req = https.get(url, { timeout: 5000 }, function (res) {
       if (res.statusCode !== 200) {
         res.resume();

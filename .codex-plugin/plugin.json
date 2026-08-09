@@ -6,8 +6,8 @@
     "name": "yiran wang",
     "url": "https://github.com/u7079256"
   },
-  "homepage": "https://github.com/u7079256/paper-wiki",
-  "repository": "https://github.com/u7079256/paper-wiki",
+  "homepage": "https://github.com/Spark-To-Paper-Skills/paper-wiki",
+  "repository": "https://github.com/Spark-To-Paper-Skills/paper-wiki",
   "license": "MIT",
   "keywords": [
     "llm",
@@ -32,7 +32,7 @@
       "Read",
       "Write"
     ],
-    "websiteURL": "https://github.com/u7079256/paper-wiki",
+    "websiteURL": "https://github.com/Spark-To-Paper-Skills/paper-wiki",
     "defaultPrompt": [
       "Initialize a Paper Wiki for this research project.",
       "Compile the new sources into this Paper Wiki.",

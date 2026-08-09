@@ -5,7 +5,7 @@ Idiot-proof guide. Two ways to OCR your PDFs: a **local** GPU or a **remote** GP
 
 ## 0. Do you even need OCR?
 - **Born-digital papers** (most arXiv) → you can **skip OCR**: use the no-OCR path in
-  [`examples/QUICKSTART.md`](https://github.com/u7079256/paper-wiki/blob/main/examples/QUICKSTART.md) (the active Claude Code or
+  [`examples/QUICKSTART.md`](https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/examples/QUICKSTART.md) (the active Claude Code or
   Codex runtime fetches and reads a faithful HTML/source representation). Fastest,
   zero setup.
 - **Scanned PDFs / slide decks / figure-heavy docs** → OCR gives you clean text +
@@ -141,7 +141,7 @@ write the password to the repo or a client memory file.
    `raw/<topic>/mineru/`. Then run the `wiki-compile` action.
 
 - Keep the password in an **OS secret store** or inject it into the current shell.
-  [`templates/memory/remote-ocr-gpu-server.md.tmpl`](https://github.com/u7079256/paper-wiki/blob/main/templates/memory/remote-ocr-gpu-server.md.tmpl)
+  [`templates/memory/remote-ocr-gpu-server.md.tmpl`](https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/templates/memory/remote-ocr-gpu-server.md.tmpl)
   is for non-secret host/environment notes only; never put the password in it.
 - Every run gets a random `mktemp` root matching `/tmp/mineru_<ns>_*`, owned by the
   SSH user and mode `0700`. Before the first PDF upload, the client starts an

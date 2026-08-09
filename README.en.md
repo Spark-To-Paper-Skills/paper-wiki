@@ -5,13 +5,13 @@
 </p>
 
 <p align="center">
-  <a href="https://u7079256.github.io/paper-wiki/#en"><img src="https://img.shields.io/badge/Landing_Page-blue?style=for-the-badge" alt="Landing Page"></a>
+  <a href="https://spark-to-paper-skills.github.io/paper-wiki/#en"><img src="https://img.shields.io/badge/Landing_Page-blue?style=for-the-badge" alt="Landing Page"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Claude_Code_%2B_Codex-Compatible-8A2BE2?style=for-the-badge" alt="Claude Code and Codex compatible">
 </p>
 
 <p align="center">
-  <a href="README.md">中文</a> · <b>English</b> · <a href="https://u7079256.github.io/paper-wiki/#en">Landing Page</a> · <a href="docs/WALKTHROUGH.md">Walkthroughs</a> · <a href="docs/TUTORIAL.md">Tutorial</a> · <a href="examples/QUICKSTART.md">Quickstart</a>
+  <a href="README.md">中文</a> · <b>English</b> · <a href="https://spark-to-paper-skills.github.io/paper-wiki/#en">Landing Page</a> · <a href="docs/WALKTHROUGH.md">Walkthroughs</a> · <a href="docs/TUTORIAL.md">Tutorial</a> · <a href="examples/QUICKSTART.md">Quickstart</a>
 </p>
 
 ---
@@ -23,7 +23,7 @@
 Run inside Claude Code:
 
 ```text
-/plugin marketplace add u7079256/paper-wiki
+/plugin marketplace add Spark-To-Paper-Skills/paper-wiki
 /plugin install paper-wiki@paper-wiki
 ```
 
@@ -46,7 +46,7 @@ codex plugin --help
 The CLI path is reproducible and works well on remote development machines:
 
 ```powershell
-codex plugin marketplace add u7079256/paper-wiki
+codex plugin marketplace add Spark-To-Paper-Skills/paper-wiki
 codex plugin add paper-wiki@paper-wiki
 codex plugin list
 ```
@@ -230,7 +230,7 @@ The `research` variant is `papers → concepts → gaps`; the `course` variant i
 Windows PowerShell:
 
 ```powershell
-git clone https://github.com/u7079256/paper-wiki.git
+git clone https://github.com/Spark-To-Paper-Skills/paper-wiki.git
 cd paper-wiki
 .\scripts\bootstrap_new_wiki.ps1 -NewPath D:\my-wiki -Topic my-topic `
     -ProjectName "My Wiki" -Variant research   # or course
@@ -239,7 +239,7 @@ cd paper-wiki
 macOS / Linux:
 
 ```bash
-git clone https://github.com/u7079256/paper-wiki.git
+git clone https://github.com/Spark-To-Paper-Skills/paper-wiki.git
 cd paper-wiki
 bash scripts/bootstrap_new_wiki.sh --path ~/my-wiki --topic my-topic \
     --name "My Wiki" --variant research        # or course

@@ -13,14 +13,14 @@ Global installation is convenient but not required for a bootstrapped project.
 Claude Code:
 
 ```text
-/plugin marketplace add u7079256/paper-wiki
+/plugin marketplace add Spark-To-Paper-Skills/paper-wiki
 /plugin install paper-wiki@paper-wiki
 ```
 
 Codex terminal:
 
 ```powershell
-codex plugin marketplace add u7079256/paper-wiki
+codex plugin marketplace add Spark-To-Paper-Skills/paper-wiki
 codex plugin add paper-wiki@paper-wiki
 ```
 

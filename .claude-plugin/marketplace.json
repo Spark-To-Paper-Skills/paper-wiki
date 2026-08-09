@@ -1,14 +1,14 @@
 {
   "name": "paper-wiki",
   "description": "Build and maintain faithfully cited, reverse-linked research and course wikis with Claude Code or Codex.",
-  "owner": { "name": "u7079256" },
+  "owner": { "name": "Spark-To-Paper-Skills" },
   "plugins": [
     {
       "name": "paper-wiki",
       "version": "0.3.0",
       "source": "./",
       "description": "Build and maintain a faithfully cited, reverse-linked LLM Wiki from papers, PDFs, slides, and course material in Claude Code or Codex.",
-      "homepage": "https://github.com/u7079256/paper-wiki",
+      "homepage": "https://github.com/Spark-To-Paper-Skills/paper-wiki",
       "license": "MIT",
       "keywords": [
         "llm",

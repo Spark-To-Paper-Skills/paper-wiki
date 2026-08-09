@@ -5,13 +5,13 @@
 </p>
 
 <p align="center">
-  <a href="https://u7079256.github.io/paper-wiki/"><img src="https://img.shields.io/badge/Landing_Page-blue?style=for-the-badge" alt="Landing Page"></a>
+  <a href="https://spark-to-paper-skills.github.io/paper-wiki/"><img src="https://img.shields.io/badge/Landing_Page-blue?style=for-the-badge" alt="Landing Page"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Claude_Code_%2B_Codex-Compatible-8A2BE2?style=for-the-badge" alt="Claude Code and Codex compatible">
 </p>
 
 <p align="center">
-  <a href="README.en.md">English</a> · <b>中文</b> · <a href="https://u7079256.github.io/paper-wiki/">项目主页</a> · <a href="docs/WALKTHROUGH.md">场景走读</a> · <a href="docs/TUTORIAL.md">命令教程</a> · <a href="examples/QUICKSTART.md">5 分钟上手</a>
+  <a href="README.en.md">English</a> · <b>中文</b> · <a href="https://spark-to-paper-skills.github.io/paper-wiki/">项目主页</a> · <a href="docs/WALKTHROUGH.md">场景走读</a> · <a href="docs/TUTORIAL.md">命令教程</a> · <a href="examples/QUICKSTART.md">5 分钟上手</a>
 </p>
 
 ---
@@ -23,7 +23,7 @@
 在 Claude Code 中运行：
 
 ```text
-/plugin marketplace add u7079256/paper-wiki
+/plugin marketplace add Spark-To-Paper-Skills/paper-wiki
 /plugin install paper-wiki@paper-wiki
 ```
 
@@ -45,7 +45,7 @@ codex plugin --help
 推荐用 CLI，步骤可复现，也适合远程开发机：
 
 ```powershell
-codex plugin marketplace add u7079256/paper-wiki
+codex plugin marketplace add Spark-To-Paper-Skills/paper-wiki
 codex plugin add paper-wiki@paper-wiki
 codex plugin list
 ```
@@ -133,7 +133,7 @@ marketplace 的官方结构说明见
 [Build plugins](https://learn.chatgpt.com/docs/build-plugins)。
 
 如果只想让某个 wiki 自包含，也可以直接
-`git clone https://github.com/u7079256/paper-wiki.git`，再用 bootstrap 脚本创建
+`git clone https://github.com/Spark-To-Paper-Skills/paper-wiki.git`，再用 bootstrap 脚本创建
 项目；生成项目不依赖全局 plugin，Claude Code 与 Codex 都能直接使用。
 
 ---
@@ -213,7 +213,7 @@ wiki-init → 导入材料 → wiki-compile → wiki-critique → wiki-ideate
 Windows PowerShell：
 
 ```powershell
-git clone https://github.com/u7079256/paper-wiki.git
+git clone https://github.com/Spark-To-Paper-Skills/paper-wiki.git
 cd paper-wiki
 .\scripts\bootstrap_new_wiki.ps1 -NewPath D:\my-wiki -Topic my-topic `
     -ProjectName "My Wiki" -Variant research   # 或 course
@@ -222,7 +222,7 @@ cd paper-wiki
 macOS / Linux：
 
 ```bash
-git clone https://github.com/u7079256/paper-wiki.git
+git clone https://github.com/Spark-To-Paper-Skills/paper-wiki.git
 cd paper-wiki
 bash scripts/bootstrap_new_wiki.sh --path ~/my-wiki --topic my-topic \
     --name "My Wiki" --variant research        # 或 course
