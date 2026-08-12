@@ -132,7 +132,7 @@ function WriteProjectManifest([string]$Path) {
 }
 
 $allManagedCommands = @(
-  'wiki-init','wiki-teach','wiki-compile','wiki-search-latest','wiki-critique','wiki-ideate','wiki-ask'
+  'wiki-init','wiki-teach','wiki-compile','wiki-search-latest','wiki-critique','wiki-ideate','wiki-ask','wiki-auto'
 )
 $allManagedAgents = @('wiki-searcher','wiki-critic','wiki-ideator')
 $protocolDocs = @('llm-wiki.protocol.yaml','OCR-SETUP.md','GOTCHAS.md')
@@ -145,7 +145,7 @@ $managedTreeRoots = @(
 
 function SetVariantAssets([string]$SelectedVariant) {
   if ($SelectedVariant -eq 'research') {
-    $script:cmds = @('wiki-init','wiki-teach','wiki-compile','wiki-search-latest','wiki-critique','wiki-ideate')
+    $script:cmds = @('wiki-init','wiki-teach','wiki-compile','wiki-search-latest','wiki-critique','wiki-ideate','wiki-auto')
     $script:agents = @('wiki-searcher','wiki-critic','wiki-ideator')
   } else {
     $script:cmds = @('wiki-init','wiki-teach','wiki-compile','wiki-critique')

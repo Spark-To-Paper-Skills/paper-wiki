@@ -152,8 +152,12 @@ $paper-wiki-project wiki-critique wiki/gaps/my-core-gap.md
 
 The critic checks the note and underlying evidence for unsupported claims,
 omissions, contradictions, and formula errors. It returns severity-tagged findings
-with exact file/section evidence. Critique is read-only; repairs are a separate,
-user-approved action.
+with exact file/section evidence. Critique stays read-only except for one
+append-only exception: it may add entries to `wiki/novelty/ledger.md` and
+`wiki/novelty/fuel.md`; repairing wiki content itself is still a separate,
+user-approved action. Novelty-type findings route through the jurisdiction
+gate, the four-question charge, and a six-value verdict — the critic never
+has, and never claims, the authority to kill an idea.
 
 ## A6. `wiki-ideate` — explore grounded combinations
 

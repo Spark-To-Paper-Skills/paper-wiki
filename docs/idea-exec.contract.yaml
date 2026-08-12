@@ -1,0 +1,150 @@
+# idea-exec.contract — machine contract for orchestrators claiming an idea card at experiment level.
+# Audience: any orchestrator — 当前默认执行后端为 Spark-to-Paper v2；mlx-experiment-autopilot
+#   （历史后端）、0-autoresearch、人肉执行（无编排器时兜底）列后 — that claims an
+#   INSTANTIATED idea card and writes to its 实验台账 (experiment ledger).
+# This contract does not define new ledger formats or verdict enums — it reuses verbatim the row
+# format and verdict enum already defined in templates/research/WIKI.md.tmpl and
+# docs/llm-wiki.protocol.yaml. See consumption_boundary for who may consume this file.
+
+contract_id: "idea-exec-contract-v0"
+version: "0.1"
+status: >
+  当前执行后端 = Spark-to-Paper v2：接过 INSTANTIATED 想法卡跑实验、出初稿，照卡上判据
+  判定，结果记实验台账；契约六条款即其接卡义务。人肉执行为无编排器时兜底，照 idea 卡上的
+  A 条款（Attributability preconditions）与 pivot 规则手工判 —— 沿用 Phase 3 已有先例
+  （探针层同样是人读判据直接裁，无自动执行接口）。
+
+orchestrator_agnostic:
+  finding: >
+    mlx-experiment-autopilot 是字节 Merlin 集群专用（抢卡/tmux/claim lock），不能当作
+    用户当前可用的执行后端假设。设计 1 的 idea-exec.contract.yaml 必须写成编排器无关：
+    mlx 是后端之一，0-autoresearch 内环是之二，人肉执行是首期现实默认（照卡上 A 条款
+    与 pivot 规则手工判）。契约的核心价值——三值 verdict + A 条款前置于 prediction
+    比较——与后端无关，人肉执行同样吃到 P4 归因收益。
+  source: "ideation-redesign-full-report.json L843（逐字引用，feasibility_findings）"
+  current_backend: >
+    编排器无关仍是设计原则；当前默认执行后端为 Spark-to-Paper v2（接过想法卡跑实验、
+    出初稿，照卡上判据判定，结果记台账）。上方 finding 为立约时点逐字引用，其
+    『人肉执行是首期现实默认』表述降为历史注记，以本键为准。
+  backends:
+    - "Spark-to-Paper v2（当前默认执行后端：接过 INSTANTIATED 想法卡跑实验、出初稿，照卡上判据判定，结果记实验台账）"
+    - "mlx-experiment-autopilot（字节 Merlin 集群专用，不是当前可用的执行后端假设）——历史注记"
+    - "0-autoresearch（内环，之二）"
+    - "人肉执行（无编排器时兜底，照卡上 A 条款与 pivot 规则手工判）"
+
+consumption_boundary:
+  reverse_declaration: >
+    mlx-autopilot 只在 experiment 级接管；探针禁用 idea-exec contract 与 manifest
+    （用「台账锚只有编排器能写」保证探针冒充不了 experiment 级；本机无编排器期间
+    [e:] 登记走人工核签）。
+  source: "probe-layer-v1.md §3（逐字，precedence=2，本节唯一权威边界声明）"
+  consistency_note: >
+    这条边界已经在 templates/research/WIKI.md.tmpl 两处逐字落地（原句：「探针禁用
+    idea-exec contract 与 manifest（那是 experiment 级基础设施，不在本 milestone）。」）。
+    本文件的反向声明与 WIKI.md.tmpl 的既有声明是双向一致，不是新增边界 —— 契约文件
+    是权威来源之一，不能只让 WIKI.md.tmpl 单方面提及它。
+  backend_note: >
+    experiment 级接管角色现由 Spark-to-Paper v2 承担；上方 reverse_declaration 的
+    mlx-autopilot 字面为 probe-layer-v1 §3 历史原文；『本机无编排器期间 [e:] 登记走
+    人工核签』限定为无编排器时的历史兜底条款。
+  who_can_consume: "experiment 级编排器（claims 一张 INSTANTIATED 卡、写实验台账的那个角色）"
+  who_cannot_consume: "探针层（probe layer）；探针预注册与判读走 wiki/probes/ledger.jsonl，不碰本契约"
+
+trigger:
+  condition: "idea 卡 status: INSTANTIATED（等价于 reinvestment gate①②已过）"
+  source: >
+    docs/llm-wiki.protocol.yaml idea_lifecycle.INSTANTIATED_to_RUNNING（逐字）：
+    "orchestrator claims the idea and writes the experiment ledger"
+  scope_note: >
+    本契约把 INSTANTIATED_to_RUNNING 转移条文里「orchestrator claims the idea」这个
+    动词具体化为下面六条款（见 clauses），不重复展开生命周期转移规则本身 —— 转移规则
+    的权威定义仍在 docs/llm-wiki.protocol.yaml 的 idea_lifecycle 块。
+  discretion_note: >
+    触发条件本身标 Assumptions Log A4（07-RESEARCH.md）：vendor 原文未给独立触发句，
+    本研究判断触发条件即 INSTANTIATED 门槛，不需要额外新增判据。
+
+clauses:
+  manifest_compilation:
+    rule: >
+      把 Instantiation DAG 展开为 shard manifest：rows = scope 网格点（各变量当前档位
+      组合）× prediction × seed；借 mlx-autopilot 的 manifest-of-shards 模式与
+      "Count missing work from outputs, not from assumptions" 纪律（此英文纪律句逐字
+      保留）；初始只展开 I0，pivot 触发才展开下一档，不预跑全网格。
+    scope_note: >
+      按 Open Question #2 的裁定：只写 vendor 的自然语言规则，不发明 YAML schema
+      细节、不给示例 manifest 片段。
+    baseline_selection: >
+      对照组基线只从 code: open 的 paper 笔记中选；closed-source 的 SOTA 只做
+      「报告数字对比」并在 manifest 里标注，供论文写作如实披露（venue_status / code
+      两字段语义见 docs/llm-wiki.protocol.yaml schemas.paper）。
+    source: "07-RESEARCH.md Design Extraction §3 条款 (1)（逐字语义提取自 ideation-redesign-full-report.json L455-459）"
+
+  dof_reading:
+    tiers:
+      free: "可改，不留痕"
+      default: "只能沿该行预注册梯度换档，换档必须在台账记 R<n> applied"
+      load-bearing: "禁改；若发现不可满足（如指标在该任务上无定义）→ HALT，写入 author-required 队列，绝不静默绕过"
+    mechanical_check_note: >
+      三档标注本身已由 scripts/idea_lint.py（L2/L3 规则）机械检查；本契约只规定编排器
+      侧的读取义务，不重复实现检查。
+    candidate_paths: >
+      idea 卡 ## Instantiation & DoF 节末尾的
+      「#### 候选路径（Candidate paths — advisory）」子节按 advisory 排序消费
+      （[default] 语义，排序是建议不是铁轨）。首选的证伪信号触发 → 直接转次选并在
+      实验台账记一行（与 R<n> pivot 行同构），无需人批；全部候选耗尽 → 走本契约
+      既有回置 DRAFT 条款（aggregation_and_halt.pivot_exhausted）。
+    source: "07-RESEARCH.md Design Extraction §3 条款 (2)"
+
+  attribution_protocol:
+    rule: >
+      每个节点跑完先机械核对 Attributability 条款（A1 地板/天花板、A2 噪音带……）；
+      任一不过 → verdict 强制为 instantiation-failure(A<n>: 实测值)，匹配 pivot 规则表
+      执行动作；全过才允许对照 predictions 记 evidence-for-P<k> / evidence-against-P<k>。
+    output_acceptance: >
+      沿 mlx-autopilot 三查：文件存在 + parse + summary.total > 0；坏产物隔离，不计入
+      任何 verdict。
+    verdict_literal_source: >
+      三个 verdict 字面（instantiation-failure(A<n>: 值) / evidence-for-P<k> /
+      evidence-against-P<k>）与 templates/research/WIKI.md.tmpl 既有枚举逐字一致
+      （该文件原句：verdict 枚举 "{pass, instantiation-failure(A<n>: 值),
+      evidence-for-P<k>, evidence-against-P<k>}"）。
+    source: "07-RESEARCH.md Design Extraction §3 条款 (3)"
+
+  ledger_writeback:
+    write_scope: >
+      编排器对 wiki 的全部写权限 = idea 卡「实验台账」节 append-only + wiki/experiments/
+      新建详情文件；纪律与 raw_immutable 同款（只增不改）。
+    row_format: "| 日期 | 节点 | verdict | 动作 | [[exp-链接]] |"
+    row_format_note: >
+      本契约引用该格式、不重新定义（Pitfall #5：三值 verdict 与实验台账行格式必须逐字
+      引用既有字面，严禁另造一套措辞相同语义的枚举）。行格式与 verdict 枚举字面来源：
+      templates/research/WIKI.md.tmpl「实验台账」节。
+    run_close_row: >
+      运行收官在实验台账补一行「胜出路径 vs 先验排序位」（候选路径误剪率的校准数据），
+      仍走上面的 row_format，不新增行格式。
+    source: "07-RESEARCH.md Design Extraction §3 条款 (4)"
+
+  aggregation_and_halt:
+    rules:
+      supported: "evidence-for 于 ≥2 个独立 scope 点成立 → 可自动置 status: SUPPORTED（非不可逆，人可改）"
+      undermined: "evidence-against 满足 kill 判据 → 置 status: UNDERMINED 并停机排队交人"
+      pivot_exhausted: "pivot 预算耗尽仍不可归因 → 置回 DRAFT，附「scope conditions 需人工修订」说明"
+    open2_note: >
+      本条不改变「v0 无自动 KILL-PENDING、人读 kill_criterion 直接裁」的现状（OPEN-2）；
+      停机交人即终局归人。
+    source: "07-RESEARCH.md Design Extraction §3 条款 (5)"
+
+  scope_revision:
+    rule: >
+      不可归因的档位（如某规模趴地板）记为 scope 下界修正建议，写入台账；人确认后才改
+      Scope conditions 节。
+    anti_slide_guard: >
+      单次编排累计收缩超过初始 scope 的一半 → 强制 author-required（防用 scope 修订
+      实现变相防御性缩水）。
+    source: "07-RESEARCH.md Design Extraction §3 条款 (6)"
+
+milestone_note: >
+  （v0.3 收官时点陈述）本 phase 只交付契约文字，未接编排器，未跑任何 experiment。六条款
+  （manifest_compilation / dof_reading / attribution_protocol / ledger_writeback /
+  aggregation_and_halt / scope_revision）齐全，已通过 yaml.safe_load 解析校验。
+  现状：当前执行后端为 Spark-to-Paper v2，见 orchestrator_agnostic.current_backend。

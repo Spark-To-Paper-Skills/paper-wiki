@@ -26,7 +26,7 @@ A research topic or question, plus optional filters: year range, venue, keywords
    - Prefer papers from last 24 months unless user asks broader
 
 3. **Fetch abstracts** (WebFetch on arXiv abstract pages)
-   - Pull: title, authors, year, abstract, arxiv id
+   - Pull: title, authors, year, abstract, arxiv id, code-repo link (if one is visible on the page)
    - Skip duplicates against existing `wiki/papers/`
 
 4. **Rank and return** (with fence awareness)
@@ -42,15 +42,26 @@ A research topic or question, plus optional filters: year range, venue, keywords
    introduce genuinely new methods vs. incremental variants of methods already in the
    wiki (helps the user judge when to stop expanding).
 
+   **Code column**: `open` (a code-repo link is visible) / `closed` (the paper
+   explicitly states no release) / `unknown` (no signal either way) — derived
+   purely from repo-link presence during the abstract fetch. Informational
+   column only; it changes nothing else (still recommend-only, never import,
+   max 10 candidates).
+
+   **Mapping note**: the Code column is a coarse pre-signal for the wiki's
+   `code` frontmatter field — an explicit "code to be released" promise on the
+   abstract page maps to `promised` at compile time; `unknown` means the
+   compiler omits the frontmatter field entirely.
+
    Output a structured markdown table:
 
 ```
 ## Candidate papers for topic: <topic>
 
-| # | Title | Authors | Venue/Year | arXiv ID | Relevance | Why |
-|---|-------|---------|------------|----------|-----------|-----|
-| 1 | ... | ... et al. | arXiv 2025 | 2501.xxxxx | ★★★★★ | Directly addresses X |
-| 2 | ... | ... | NeurIPS 2024 | ... | [FENCE] | Falls in excluded area: <reason> |
+| # | Title | Authors | Venue/Year | arXiv ID | Code | Relevance | Why |
+|---|-------|---------|------------|----------|------|-----------|-----|
+| 1 | ... | ... et al. | arXiv 2025 | 2501.xxxxx | open | ★★★★★ | Directly addresses X |
+| 2 | ... | ... | NeurIPS 2024 | ... | unknown | [FENCE] | Falls in excluded area: <reason> |
 
 ## Saturation
 New methods introduced: X / Y candidates. (Z already-covered variants.)

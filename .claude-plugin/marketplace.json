@@ -5,7 +5,7 @@
   "plugins": [
     {
       "name": "paper-wiki",
-      "version": "0.3.0",
+      "version": "2.0.0",
       "source": "./",
       "description": "Build and maintain a faithfully cited, reverse-linked LLM Wiki from papers, PDFs, slides, and course material in Claude Code or Codex.",
       "homepage": "https://github.com/Spark-To-Paper-Skills/paper-wiki",

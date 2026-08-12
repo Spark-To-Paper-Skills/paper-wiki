@@ -102,7 +102,7 @@ write_manifest() {
 
 set_variant_assets() {
   if [ "$VARIANT" = research ]; then
-    CMDS=(wiki-init wiki-teach wiki-compile wiki-search-latest wiki-critique wiki-ideate)
+    CMDS=(wiki-init wiki-teach wiki-compile wiki-search-latest wiki-critique wiki-ideate wiki-auto)
     AGENTS=(wiki-searcher wiki-critic wiki-ideator)
   else
     CMDS=(wiki-init wiki-teach wiki-compile wiki-critique)
@@ -110,7 +110,7 @@ set_variant_assets() {
   fi
 }
 
-ALL_CMDS=(wiki-init wiki-teach wiki-compile wiki-search-latest wiki-critique wiki-ideate wiki-ask)
+ALL_CMDS=(wiki-init wiki-teach wiki-compile wiki-search-latest wiki-critique wiki-ideate wiki-ask wiki-auto)
 ALL_AGENTS=(wiki-searcher wiki-critic wiki-ideator)
 PROTOCOL_DOCS=(llm-wiki.protocol.yaml OCR-SETUP.md GOTCHAS.md)
 MANAGED_TREES=(.claude/commands .claude/agents .agents/skills/paper-wiki-project .paper-wiki)

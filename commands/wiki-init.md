@@ -50,7 +50,12 @@ After confirmation:
    sections in `WIKI.md`; preserve all reusable rules.
 3. Fill every project placeholder in `research.md` and append a dated progress line.
 4. Research: fill seed directions and the scope fence; set
-   `lifecycle_state: BUILDING`.
+   `lifecycle_state: BUILDING`. The fence also includes
+   `expansion_mode: attended` by default (`/wiki-auto` requires `auto`).
+   If `wiki/novelty/ledger.md` or
+   `wiki/novelty/fuel.md` does not exist yet, create it as a stub containing
+   only its heading and the entry-format description already defined in
+   `WIKI.md` (the `wiki/novelty/` section) — never any pre-filled entries.
 5. Course: inventory unpacked materials and optionally draft
    `wiki/exam-scope.md` from the user-designated scope document.
 

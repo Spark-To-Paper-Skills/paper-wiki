@@ -68,9 +68,12 @@ wiki-search-latest  → confirm imports → remote OCR → wiki-compile
    → wiki-critique (adversarial)  → wiki-ideate (recombine methods x constraints)
    → refine the gap; user sets novelty_verified: true when confident
 ```
-As you add rounds, the novelty boundary **narrows** — each new neighbor paper
-compresses the claim. Keep the gap's "what makes this novel" honest and current;
-track novelty *threats* (e.g., a same-venue accepted paper) explicitly.
+As you add rounds, structural hits inside the fence get adjudicated into a more
+precise claim — hits outside the fence supply transfer fuel instead, they don't
+compress it. The boundary refines, it does not narrow. Keep the gap's "what makes
+this novel" honest and current; novelty threats and verdicts (e.g., a same-venue
+accepted paper) are tracked in `wiki/novelty/ledger.md`, not left scattered in the
+gap prose.
 `wiki-search-latest` marks excluded candidates `[FENCE]`; `wiki-compile` pauses
 before concepts that cross an exclusion boundary (see section 9). After big
 expansions, run a **cross-file consistency audit** (links, gap-table facts vs the

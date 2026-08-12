@@ -13,6 +13,7 @@
 
 - `WIKI.md` 是本项目唯一的业务规则权威。项目规则、variant、schema 或工作流约束只在这里修改。
 - `research.md` 保存跨会话共享的研究上下文、Scope fence、进度和 TODO；每次开始工作都先读。
+- Scope fence 除 `lifecycle_state` 外还带 `expansion_mode: attended | auto` 键（默认 attended），`/wiki-auto` 的前置检查读取该键——仅 auto 放行，FROZEN 压倒一切。
 - `CLAUDE.md` 与 `AGENTS.md` 只是薄 adapter，不复制业务规则。
 - Claude Code 直接使用 `.claude/commands/` 中的 `/wiki-*` 命令。
 - Codex 使用 `.agents/skills/paper-wiki-project/SKILL.md`，按用户意图读取同一份 `.claude/commands/wiki-*.md` 流程，再映射到 Codex 原生能力。
@@ -40,8 +41,16 @@
 │   ├── papers/             # paper-level 笔记（每篇一个文件）
 │   ├── concepts/           # 跨论文综合的概念文章
 │   ├── gaps/               # 已识别的研究空白与 novelty 论证
+│   ├── ideas/              # 分层 idea 卡，≤10 节，双栏 Claim，status 起于 DRAFT
+│   ├── directions/         # 方向卡（wiki/directions/），独立 note 型，状态起于 EXPLORING
+│   ├── probes/             # 探针预注册与判读（wiki/probes/），含 ledger.jsonl hash 台账，append-only
 │   ├── experiments/        # 自有论文与实验进展记录
-│   └── notes/              # 对话快照（结构较松，但要可追溯）
+│   ├── notes/              # 对话快照（结构较松，但要可追溯）
+│   ├── novelty/            # novelty 审理产物：ledger.md（既判力台账，append-only）
+│   │                       # 与 fuel.md（ideator 唯一可读的 novelty 产物）
+│   └── field/              # 高空表示层四件：assumptions/tensions/saturation/problems.md（wiki-cartographer 维护）
+│       │                   # wiki/field/problems.md 候选清单（Hamming 一行）
+│       └── problems/       # wiki/field/problems/ 采纳后的六件套 goal 卡（见 §4e）
 ├── scripts/                # 本地/远程 GPU OCR 与 PPTX 兜底脚本
 ├── .claude/{commands,agents}/
 │                           # 两端共用的工作流正文与 Claude 子 agent 定义
@@ -77,7 +86,7 @@ Claude Code 可按命令文件中的 agent 名调用项目 agent；Codex 忽略 
 - worker 只拿本步骤必需的明确路径与最小工具权限。需要外联、运行命令或读取 allowlist 之外文件时，必须停止并把请求交回 coordinator；只能由 coordinator 按既有用户确认门执行独立步骤。
 - 上述边界不改变 `raw/` 只增不改、逐页完整读取、逐条引用、禁止幻觉、GPU-only OCR 与 single-writer 规则。
 
-**典型闭环：**`wiki-search-latest` → 用户确认导入 → GPU OCR（如需要）→ `wiki-compile`（写 paper/concept/gap）→ `wiki-critique` → `wiki-ideate`（只输出 proposed note/patch）→ 用户另起明确批准的 create/repair action 落盘。只有用户能决定是否把 `novelty_verified` 改为 `true`。
+**典型闭环：**`wiki-search-latest` → 用户确认导入 → GPU OCR（如需要）→ `wiki-compile`（写 paper/concept/gap）→ `wiki-critique` → `wiki-ideate`（只输出 proposed note/patch）→ 用户另起明确批准的 create/repair action 落盘。只有用户能决定是否把 `novelty_verified` 改为 `true`;auto 运行(/wiki-auto 驱动)例外——机器可置位,签名标 auto+日期、`wiki/INBOX.md` 记一行,人保留事后翻案权。
 
 ## 用 wiki-teach 读 wiki
 
@@ -115,10 +124,13 @@ Claude Code 可按命令文件中的 agent 名调用项目 agent；Codex 忽略 
 title: <paper title>
 authors: <first author et al.>
 venue: <CVPR 2023 / arXiv 20xx.xxxxx>
+venue_status: peer-reviewed | preprint-only   # 机械盖章:看会议/期刊标注有无;缺失=unknown(合法),下游保守处理
+code: open | closed | promised                # 机械盖章:看代码仓链接有无;缺失=unknown(合法),下游保守处理
 tags: [<kw1>, <kw2>]
 status: compiled
 compiled_at: <YYYY-MM-DD>
 source_path: raw/{{TOPIC}}/...
+fence_zone: core | adjacent | outside
 ---
 ## 一句话总结
 ## 解决什么问题
@@ -129,6 +141,10 @@ source_path: raw/{{TOPIC}}/...
 - [[concept-xxx]]
 - [[paper-yyy]]（提出 A，本文改进 B）
 ```
+
+`fence_zone` 标记该论文相对 `research.md` Scope fence 的管辖域；`outside` 的论文不得作为 collision 指控的证据来源，命中相似时唯一合法动作是产 `wiki/novelty/fuel.md` 条目。该字段 compile 时与 `venue_status`/`code` 并列机械盖章；拿不准留空——缺失=歧义，沿用既有安全默认（审理侧退人裁）。
+
+`venue_status` 与 `code` 是质量章字段，compile 时机械盖章：`venue_status` 看会议/期刊标注有无（有 → `peer-reviewed`，只有 arXiv 号 → `preprint-only`）；`code` 看代码仓链接有无（有 → `open`，明文声明闭源 → `closed`，声称将放出 → `promised`）。两字段缺失=unknown，合法——不猜、不补，下游消费方一律按保守值处理（不当作 peer-reviewed / open）。
 
 ### 3. concept 文章（`wiki/concepts/<concept>.md`）
 
@@ -160,6 +176,370 @@ novelty_verified: false   # 待 ideation 与人工判断
 ## 相关文献
 ```
 
+### 4b. idea 卡（`wiki/ideas/<slug>.md`）
+
+新增目录：`wiki/ideas/`（分层 idea 卡，≤10 节，双栏 Claim，status 起于 DRAFT）与 `wiki/field/`（高空表示层三件：assumptions/tensions/saturation）。单一 idea 卡 schema（≤10 节骨架，当前 9 节），双栏 Claim 本 phase 只落**占位结构 + 写法规则**，断言强度封顶 lint 留到探针层 phase：
+
+```markdown
+---
+type: idea
+seeded_from: ["[[gap-x]]"]
+status: DRAFT
+novelty_ref: "[[gap-x]]"
+delta: <这版假设相对上一版改了什么；首版写 "initial">
+archetype: null
+seed_type: null
+complexity_tier: null
+pitch: null
+residual_destination: null
+venue_targets: []
+execution:
+  compute: null
+  data: null
+  engineering: null
+  first_signal: null
+  expensive_deps: []
+interest:
+  enables: null
+  connects: null
+  unifies: null
+  opens: null
+  important_problem: null
+---
+## Observation
+- [w] <文献楔子观察，带 wiki 链接到具体表格/曲线/现象>
+
+## Surprise & rule-out
+- 为何反直觉：<一句话>
+- rule-out 1：<被排除的平凡解释> —— 排除依据：<……>
+- rule-out 2：<被排除的平凡解释> —— 排除依据：<……>
+
+## Claim
+
+### Hypothesis(大胆版)
+现阶段 <population（模型族/方法类/现象）> 在 <条件族> 下存在/表现出 <机制级现象 Y>，机制上可能源于 <X>。
+Reframe: X from A to B
+
+### 当前可断言(assertable now)
+<被证据等级约束的降级表述；当前证据等级只有 [w] 时写成 hypothesis 语气的收缩版本，不得写成实例化数值>
+
+#### delta
+<可选，承载本轮相对上一版的改动说明>
+
+## Scope conditions
+| 变量 | 范围 | 预期梯度 |
+|---|---|---|
+| <变量1> | <范围> | <预期梯度> |
+| <变量2> | <范围> | <预期梯度> |
+
+## Predictions
+- P1 (strong): <可测陈述> [独立于 P2 因为 <理由>]
+- P2 (medium): <可测陈述>
+
+## Attributability preconditions
+- A1: <机械可判条件>
+- A2: <机械可判条件>
+
+## Instantiation & DoF
+- 设定: 值 [load-bearing]（推导: <从 thesis 推导其必要性>）
+- 设定: 值 [default]
+- 设定: 值 [free]
+
+#### 候选路径（Candidate paths — advisory）
+P1（首选）: <机制路线一句> —— 依据: <文献/wiki 条目引用> —— 快速证伪信号: <便宜可观测的信号>
+P2（次选）: <机制路线一句> —— 依据: <文献/wiki 条目引用> —— 快速证伪信号: <便宜可观测的信号>
+已剪（逐条带剪枝理由）:
+- <被剪路线一> —— <剪枝理由>
+- <被剪路线二> —— <剪枝理由>
+
+## Pivot rules
+- R1: 若 <机械可判条件> → <动作>，记 instantiation-failure，不动 thesis
+- R2: 若 <机械可判条件> → <动作>，记 instantiation-failure，不动 thesis
+
+## 实验台账
+| 日期 | 节点 | verdict | 动作 | [[exp-链接]] |
+|---|---|---|---|---|
+```
+
+围栏外写法规则（逐节，取自 03-RESEARCH.md §1 逐字定义）：
+
+- **Observation**：每条前缀三级锚标签 `[w]`（文献楔子）/ `[p]`（自家探针）/ `[e]`（编排器台账）；新卡初始产出仍是 `[w]`；`[p]` 已可达——预注册探针判读落 `probe-confirms` 后即上爬为 `[p]`（auto 运行下由机器按 `/wiki-auto` 执行 [w]→[p] 锚爬升）；`[e]` 仍是占位书写惯例，依赖后续实验编排基础设施，当前不做判读。为空或以 propose/design 开头 → lint 打回。
+- **Surprise & rule-out**：顶会档要求 ≥2 条被排除的平凡解释及排除依据（仿 ResNet「不是 overfitting、不是梯度消失」）；写不出说明 observation 不够 surprising，退回 Phase 2。
+- **Claim（双栏）**：Hypothesis 栏（大胆版）主语必须是 population（模型族/方法类/现象），用模板「现阶段 `<population>` 在 `<条件族>` 下存在/表现出 `<机制级现象 Y>`，机制上可能源于 `<X>`」，强度不设上限，末尾补一句 `Reframe: X from A to B`；当前可断言栏（assertable now）是被证据等级约束的降级表述，当前证据等级只有 `[w]` 时写成 hypothesis 语气的收缩版本，不得写成实例化数值。**具体模型名、参数量、单一 benchmark 名只能出现在 `## Instantiation & DoF`。**`delta` 是该节的辅助元数据，claim 正文只在 `## Claim` 节存放一处，`delta`/`pitch`/`claim_strength` 不得另写一份独立 claim。
+- **Scope conditions**：表格三列（变量 | 范围 | 预期梯度），≥2 变量、每变量 ≥2 档。
+- **Predictions**：行格式 `- P<n> (strong|medium|weak): <可测陈述> [独立于 P<m> 因为 <理由>]`，≥2 条 ≥1 strong；strong 的定义 = 反向观察即构成对 thesis 的实质证据（而非仅对某实例化）。
+- **Attributability preconditions**：每条机械可判，编号 `A1:` `A2:` ……；任一不满足 → 只能记 instantiation-failure 并触发 pivot，禁止记作 thesis 的方向证据。
+- **Instantiation & DoF**：I0 逐行 `设定: 值 [load-bearing|default|free]`，`[load-bearing]` 行必须跟一句 `(推导: …)`；三档 DoF 定义：load-bearing = 改了等于换 idea；default = 顺手选的默认值，可沿梯度替换；free = 编排器可自由改（seed、prompt 措辞、batch size）。
+- **候选路径（Candidate paths — advisory）**：`## Instantiation & DoF` 节末尾的 `####` 子节（只是子节，不新增 `##` 节，不影响 ≤10 节计数）。内容：P1（首选）/P2（次选）/（可选 P3）各一行，每行 = 机制路线一句 + 依据（文献/wiki 条目引用）+ 快速证伪信号（便宜可观测）；「已剪」列表逐条带剪枝理由；条数 2-3（设计值可回调）。先验证据等级=文献级 `[w]`；首选可另做一次 P0 冒烟（可选，非门槛）。**排序是建议不是铁轨（`[default]` 语义）**，执行者按 advisory 消费。换枝规则：首选的证伪信号触发 → 直接转次选并在 `## 实验台账` 记一行（与 `R<n>` pivot 行同构），无需人批；全部候选耗尽 → 走合同既有回置 DRAFT 条款。运行收官在 `## 实验台账` 补一行「胜出路径 vs 先验排序位」（误剪率校准数据）。本子节由 ideator 的 method landscape / Why-it-might-NOT-work 分析蒸馏填充（现状该分析生成后即丢弃，此处是其固化落点）。书写形状：`P<n>` 行不用 `-`/`*` 开头、「已剪」条目行内不用冒号——与 `设定: 值` 设定行机械区分，不带 DoF 标签，不触发 `scripts/idea_lint.py` 的 L2/L3。
+- **Pivot rules**：行格式 `R<n>: 若 <机械可判条件> → <动作>，记 instantiation-failure，不动 thesis`，≥2 条；另注一句红队建议的**可选**加固项 `R0: 先跑 harness sanity check（已知可解样例通过率）再动模型规模`。
+- **实验台账**：append-only，编排器唯一可回写区，行格式 `| 日期 | 节点 | verdict | 动作 | [[exp-链接]] |`，verdict 枚举 `{pass, instantiation-failure(A<n>: 值), evidence-for-P<k>, evidence-against-P<k>}`。
+- **字段命名纪律**：`residual_destination` 回答"死后资产去哪"，与 goal 卡的 `death_type`（回答"为什么死"）是两个不同问题，故意不共用字段名、不互相套用取值域。
+- **interest 语义**：`interest:` 块用"非空即算数"的布尔资格语义，不是 0-10 分量表——五个子键填的是一句话答案或 `null`，不是数字；详细判定规则见下方「分级判定」小节。
+- **生命周期收窄说明**：本 phase 起 `SCORED`/`PARKED`/`PROMOTED`/`MERGED` 进入 idea 层枚举并有转移条文，机械驱动仍收窄——唯一机械拦截项是残值必填；完整状态枚举见 protocol 的 `idea_lifecycle`。
+
+#### 分级判定（interest 四问 / 执行五维 / 四档映射 / venue 亲和）
+
+(1) **interest 四问**（`interest:` 块）：(a) enables 什么此前做不到的事 (b) 连接哪些此前无关的结果 (c) 统一/简化什么 (d) 打开什么新问题；每问非空即算数，不打权重分；**≥2 问非空才够顶会档**。第五项 `important_problem` 挂靠（溯源到 `wiki/field/problems.md`、`problems/<goal-id>.md` 或某条 field 层记录的重要问题）为空，则无论四问答得多好都自动排除出顶会档。`interest` 不看难度。auto 运行下评级委派必须落盘 `wiki/ideas/<id>.tiering.md` 工件（输入白名单+未读声明+四问原文+四档结论，定义见 protocol `auto_run`）；无 tiering 工件的 `SCORED` 视为未评级。
+
+(2) **执行五维**（`execution:` 块）：`compute` ∈ {prompt-only, 单卡小时, 多卡天, 集群周}（取 instantiation ladder 最便宜路径）；`data` ∈ {现成 benchmark, 需构造, 需标注, 需人评}；`engineering` ∈ {改 prompt, 改推理管线, 改训练, 建系统}；`first_signal` ∈ {≤1 天, ≤1 周, ≤1 月, >1 月}（ladder 最短路径的首个 go/no-go 信号）；`expensive_deps` 是贵组件清单（人评 / 闭源 API 大规模调用 / 大模型训练），非空则强制该卡 Instantiation ladder 里写出廉价替代路径，否则降档（降档不是打回）。`execution:` 块是 `## Instantiation & DoF` 节的结构化摘要，不是独立打分。
+
+(3) **四档映射规则**（Pareto front 外只降档不删除）：**顶会大工程** = interest ≥2 问非空 + compute/engineering 重 + ladder ≥3 条独立路径；**新颖占坑** = interest ≥2 问 + first_signal ≤1 周 + 卡上同时写占坑版与完整版实例化（占坑版必须是完整版的真子集）；**理论·position** = interest ≥2 问 + seed_type ∈ {unification, position, measurement-gap 的批判形态} + 零/轻实验；**低层级可行** = interest 1 问非空 + 易做，是明确合法产出，不是失败品。`complexity_tier` 的取值域即这四个标签：顶会大工程 / 新颖占坑 / 理论·position / 低层级可行。两轴关系：`seed_type` 是溯源类型（L0 缝合 / L1 结构迁移 / L2 假设翻转 / L3 张力-测量-position / L4 机制发现），决定默认档；`complexity_tier` 是升降档判定后的最终声明；`archetype` 存叙事原型，与档位判定正交、不参与四档映射。
+
+(4) **venue 亲和检查**：卡上标 `venue_targets` 列表；规则举例——纯视觉 observation + ARR 冲突，给两个修复选项：改叙事（挂语言/多模态钩子并列出 wiki 里可用的桥接证据）或改 venue；measurement/position 种子提示 ARR theme track 或 TMLR 通道；scaling/大工程 指向 NeurIPS/ICML。**affinity 冲突不否决，只输出修复建议。**
+
+**残值必填规则**：`status` 写成 `RETIRED` 或 `PARKED` 时，`residual_destination` 必须非空，值指向 `wiki/salvage/` 或某条 field 层记录（`assumptions.md` / `tensions.md` / `saturation.md` / `problems.md` 均可）；此规则由 `scripts/idea_lint.py` 机械拦截。元规则：**杀 idea 不杀资产**，wedge、探针结果、负结果回流 salvage 与 field map。(回流侧当前无消费者——休眠,留待下一代方向;`residual_destination` 字段照填、S2 照拦。)
+
+**OPEN-3**（设计值，可回调，终局归人）：L0 诚实卡免 de-defense 强制升格，档位声明算 hedge 的合法背书；de-defense 强制升格逻辑本身由已独立存在的 `paper-de-defense` skill 承载，本仓库不改动它。
+
+### 4c. 方向卡（`wiki/directions/<slug>.md`）
+
+新增目录：`wiki/directions/`（方向卡，第 5 型，独立 note 型，状态起于 EXPLORING）。方向卡承载
+probe-layer-v1 §5 v0 冻结五件的第①件，与 idea 卡是两个独立生命周期——不进 `idea_lifecycle`，比 idea 卡
+更早、更粗、更便宜。
+
+```markdown
+---
+type: direction
+status: EXPLORING
+interest_prior: medium
+feasibility_prior: medium
+probe_budget: 3
+ideal_probe: "<预算无限时最想跑的那个探针，一句话>"
+probe_gap: high
+anchored_surface_entry: null
+created_at: <YYYY-MM-DD>
+---
+## 方向陈述
+<一句疑问式方向陈述，必须以 ？或 ? 结尾；禁写成机制归因命题句>
+
+## Wedges
+- [w] <楔子一，带锚——链到具体表格/曲线/现象>
+- [w] <楔子二，带锚>
+
+## 平凡解释候选清单
+- <平凡解释候选一——方向卡阶段只列候选，不要求逐条排除>
+- <平凡解释候选二>
+
+## 探针计划
+- P0 <prompt-only、今晚跑完的候选探针>
+- P1 <复分析 ≤2h 的候选探针（可选）>
+- P2 <≤8 GPU·h 的候选探针（可选）>
+```
+
+围栏外写法规则：
+
+1. 方向卡是**独立 note 型，不是 idea 卡的前置态**，不进 `idea_lifecycle`；比 idea 卡更早、更粗、更便宜。
+2. `## 方向陈述` 必须疑问式，禁机制归因命题句 —— 由 `scripts/idea_lint.py` 的 **D1** 规则机械拦截。与 idea
+   卡 Hypothesis 栏的命题句模板刻意镜像对照。
+3. `## Wedges` 每条带锚，方向卡阶段**等级恒为 `[w]`**（`[p]`/`[e]` 要等探针/编排器产出）。
+4. `## 平凡解释候选清单` 只列候选，不要求逐条排除 —— 排除工作在 idea 卡的 `## Surprise & rule-out` 完成，
+   这正是方向层探索成本更低的字面体现。
+5. 状态机：`EXPLORING → PROBING → {CRYSTALLIZED | PARKED | PARKED-UNPROBEABLE | DATA-KILLED | MERGED}`。
+   **v0 只强制产出 `EXPLORING`**；`PROBING`/`CRYSTALLIZED` 由 P0 冒烟 fixture 实测走一遍；其余四态只枚举
+   不驱动。
+6. `probe_budget` 默认 3、上限 5（设计值，可回调）。
+   活跃方向 ≤6（设计值，可回调）；`PARKED-UNPROBEABLE` 不占名额、每 4 周期强制重访。以上配额 v0 无机械
+   抓手，只成文。从 goal 卡 `Attack surface` 开出的方向卡在 frontmatter 记
+   `anchored_surface_entry: <所锚条目>`（exploratory 卡可空），供收尾「Attack surface N 条/已开方向
+   M 张」盘点行机械对数。
+7. `ideal_probe` / `probe_gap` 是 streetlight 对策字段。红队条款 C 的「每周期 ≥1 个探针名额留给
+   `probe_gap: high` 且 interest 最高的方向」字面条文已写，v0 无机械执行对象（需多方向并存的运营节奏）。
+8. **免诉**：方向卡不是立案对象。审理侧的类型管辖闸见 `agents/wiki-critic.md` Step 0.0。
+
+### 4d. 探针（`wiki/probes/<probe-id>.md`）
+
+新增目录：`wiki/probes/`（探针，第 6 型，预注册与判读；含 `wiki/probes/ledger.jsonl` append-only hash
+台账）。探针资格 = 成本档（`P0` prompt-only、今晚跑完 / `P1` 复分析 ≤2h / `P2` ≤8 GPU·h（设计值，可回调））
++ 时间盒 ≤24h + 双向信息量表 + pilot 铁律。探针禁用 idea-exec contract 与 manifest（那是 experiment 级
+基础设施，不在本 milestone）。
+
+```markdown
+---
+type: probe
+probe_id: <slug>
+direction_ref: "[[direction-x]]"
+cost_tier: P0
+time_box_hours: 24
+status: preregistered
+created_at: <YYYY-MM-DD>
+---
+## 双向信息量表
+- 若 confirms —— <这说明什么。必填，留空即打回>
+- 若 disconfirms —— <这说明什么。必填，留空即打回>
+
+## pilot 铁律声明
+本探针只估可行性、信号量级与方差，结果一律 indicative，永不确认 claim。
+
+## kill_criterion
+<可选。仅当本探针携带处决权时填>
+- 判据原文 —— <预注册时写死的机械可判条件>
+- sanity 前提 —— <判据成立所依赖的前置检查>
+
+## 三值判读
+<预注册时留空，判读时回填>
+- verdict —— <probe-confirms | probe-disconfirms | probe-inconclusive>
+- 实测值 —— <……>
+- 死亡证明 —— <判据原文 / 实测值 / 残值去向 / applicable_setup。仅 disconfirms 且带 kill_criterion 时填>
+- 人签 —— <人名 + 日期；auto 运行（/wiki-auto 驱动）下机签：写 auto + 日期，如实标注>
+```
+
+围栏外写法规则：
+
+9. 成本档定义：`P0` = prompt-only、今晚跑完（零 GPU 时）；`P1` = 复分析 ≤2h；`P2` = ≤8 GPU·h（设计值，
+   可回调）。时间盒一律 ≤24h。（注：`P0 ≤ 8 GPU·h` 是 CONTEXT.md 的压缩笔误，以此处 vendor 原文定义为准。）
+10. **双向信息量表任一侧为空即打回** —— 预注册时必须写死两种结果各说明什么（EIG 的自然语言版）。
+11. **pilot 铁律**：只估可行性/信号量级/方差，结果一律 indicative，**永不确认 claim**。
+12. **三值判读**：`probe-confirms` / `probe-disconfirms` / `probe-inconclusive`。
+    **「没做出来」= `probe-inconclusive`，结构性排除在处决之外** —— 工具报错、数据不可得、时间盒超时
+    一律不得记 `probe-disconfirms`，必须记 `probe-inconclusive` 并写明失败原因。预注册 prereg 行必填
+    `n_samples`，判读时 `n_samples` 低于 max(全局最小 n（protocol `p0_min_n`）, kill_criterion 声明的
+    最小样本) → 只能记 `probe-inconclusive`。
+13. **全量落盘含 inconclusive，不许只报喜。**
+14. 落盘契约三条：文件存在 + 可解析 + 非空才算有效；坏产物隔离；全量 diff 不只 assert。
+15. **kill 通道 v0 = 数据知情的人杀**：死亡证明照写、判据照预注册，但**无自动 KILL-PENDING**，人读判据 +
+    实测直接裁（OPEN-2，首季自动处决不上膛；上膛终局归人）。auto 例外：auto 运行
+    （/wiki-auto 驱动）下机器读判据 + 实测可直接裁——死亡证明照写、残值去向照填、收件箱记一行（签名标
+    auto + 日期），人保留事后翻案权（常规编辑）。
+16. 探针禁用 idea-exec contract 与 manifest（那是 experiment 级基础设施，不在本 milestone）。
+
+#### `wiki/probes/ledger.jsonl`
+
+append-only hash 台账，探针预注册、判读与豁免的时间序列证据；每行一个 JSON 对象：
+
+```jsonc
+{"probe_id": "<slug>", "event": "prereg",  "n_samples": <int>, "sha256": "<该 probe 文件此刻内容的 sha256>", "ts": "<ISO8601>"}
+{"probe_id": "<slug>", "event": "verdict", "sha256": "<判读回填后 probe 文件内容的 sha256>", "ts": "<ISO8601>"}
+{"probe_id": null, "event": "waiver", "idea_ref": "[[idea-x]]", "ideal_probe": "<为何探不起>", "tier_bump_note": "<tier 上调一档的说明；complexity_tier 已有四档实值，但 waiver 侧无机械改档接口，仅记文字>", "signed_by": "<人名>", "sha256": "<waiver 说明的 sha256>", "ts": "<ISO8601>"}
+```
+
+`sha256` 计算方式（纯 stdlib，零新依赖）：`hashlib.sha256(path.read_bytes()).hexdigest()`。
+引入本行的那个 commit 即其证据（由 git 历史承载）——行内不写 `commit` 字段、不回填。
+
+台账纪律：
+
+17. **append-only**：只追加，不改写、不删除既有行。
+18. **每次追加后立即 `git add` + `git commit`** —— 红队条款 F 的防线：workflow resume 会重置工作树，未
+    提交的探针记录会被吞掉，已提交的不会。不允许把探针记录攒着跨越多个任务边界。
+19. 每个探针至少两行：`event: prereg`（锁定预注册时承诺了什么）+ `event: verdict`（锁定判读落盘内容）；
+    `event: waiver` 是第三种行，由重投入闸②（今名 查新·实据闸）的人签豁免使用（见 04-06；auto 运行下机器可签，
+    须写明理由）。
+20. 路径口径：本项目逐字使用 `wiki/probes/ledger.jsonl`；vendor 红队条款 F 写作 `probes/ledger.jsonl`，是
+    省略 `wiki/` 前缀的同一份文件，不是第二份台账。
+
+### field/ 四件（`wiki/field/{assumptions,tensions,saturation,problems}.md`）
+
+高空表示层最小子集；`lineages.md` 仍不建。`problems.md` 本 phase 起兑现此前延后的双态化承诺，正式并入四件。
+
+`wiki/field/problems.md`（单文件，候选清单）：Hamming 式候选清单，一行一条能力缺口式问题陈述，可选带来源 gap 反链与四分诊断初步倾向——故意比六件套便宜，不要求逐字六件套完整度。人采纳某条候选时，展开为 `wiki/field/problems/<goal-id>.md`（子目录，六件套 goal 卡，见 §4e）；auto 运行（/wiki-auto 驱动）下由机器从围栏内候选中挑选采纳，goal 卡 frontmatter 记 `adopted_by: auto`（机采如实标注）并在 `wiki/INBOX.md` 记一行。两者并存但物理分离：`problems.md` 是候选清单文件，`wiki/field/problems/` 是已采纳 goal 的六件套档案子目录，成本落差是刻意设计。
+
+### 4e. goal 卡（`wiki/field/problems/<goal-id>.md`）
+
+判别键固定 `kind: adopted-goal`，**不是** `type:`——不是第五种 note 型，管辖上属 field 层免诉，审理闸第 0 步不改（`wiki/field/` 前缀规则天然覆盖 `wiki/field/problems/` 这一子目录，无需新增判断分支）。
+
+```markdown
+---
+kind: adopted-goal
+goal_id: <slug>
+status: ADOPTED
+statement_version: 1
+created_at: <YYYY-MM-DD>
+adopted_at: <YYYY-MM-DD>
+---
+## 问题陈述
+<能力缺口式陈述；禁方法名与「用 X 解决」句式>
+
+## Success criteria
+- <标准一> [facet: main]
+- <标准二> [facet: heldout]
+- <标准三> [facet: mechanism]
+
+## Admissibility
+- 禁止 <捷径/失败模式描述> —— 锚 [[wiki 证据]]
+
+## Non-goals
+- <明确排除项；partially-solved 划走的子集须逐条带引用 [[ledger 条目]]>
+
+## Attack surface
+- [[攻击角一]]
+- [[攻击角二]]
+
+## 状态与 closure
+status: ADOPTED | GAP-CLOSED | RETIRED-BY-FIELD | attack-exhausted | PARKED-UNTIL
+death_type: disconfirmed | starved | superseded
+```
+
+围栏外写法规则：
+
+- frontmatter 判别键固定 `kind: adopted-goal`，禁止写成 `type: goal`——与 idea/direction/probe 卡的 `type:` 字段刻意区分，标记"field 层免诉"。示例 frontmatter 不携带 idea/direction/probe 卡常见的外链聚合字段（跨卡引用清单类四个 key），避免顶高围栏计数 Counter。
+- `## 问题陈述`：能力缺口式，禁方法名（词表法，复用/扩展 idea 卡 Hypothesis 禁令词表）与「用 X 解决」句式；方法 novelty（Heilmeier Q3）下放 direction 卡。
+- `## Success criteria`：每条标签写 `[facet: main|heldout|mechanism]`（三选一，逐条只标一个 facet），main/heldout/mechanism 各 ≥1 条，且全部方法无关。heldout 对象 goal 期禁实名——实验期由方法盲的一方抽取。mechanism 条须编译为留出场景的失效方向预测，验收看预测命中，不评解释文本。
+- `## Admissibility`：只准禁令句式，每条锚定 wiki 已记录的捷径/失败证据（引不出锚即打回）。定位是已知病原疫苗，不是防线主体——真防线在实验层。
+- `## Non-goals`：≥1 条；partially-solved 划走的子集逐条带引用。
+- `## Attack surface`：≥2 件，逐件核实存在且已读。
+- `## 状态与 closure`：状态取值见 `docs/llm-wiki.protocol.yaml` 的 `goal_lifecycle:`；`death_type: disconfirmed|starved|superseded` 为强制字段，仅 `disconfirmed` 计入"已知不通"。
+- 瘦身版补充规则：四分诊断与开放性证据入 ledger 只留指针，不在卡里展开；hints 节整删——有攻击角直接开方向卡；dead ends 由死亡证明反链自动生成。
+
+公共 frontmatter（三件工件通用）：
+
+```yaml
+last_zoomout: <date>
+papers_at_zoomout: <int>
+staleness: <当前库内篇数 - papers_at_zoomout>
+maintainer: wiki-cartographer
+```
+
+`assumptions.md`（共享假设台账）条目字段：
+
+```yaml
+relied_by: ["[[paper-x]]", "[[paper-y]]"]   # >=3 篇才准入账，且去重后指向 >=2 个不同目标（scripts/idea_lint.py F1 机械拦截）
+evidence_strength: established | assumed | contested
+constraint_class: hard | soft | hidden
+flip_sketch: <翻转后世界长什么样，2-3 句，不是 idea 只是素描>
+```
+
+`tensions.md`（张力/矛盾清单）条目字段：
+
+```yaml
+side_a: "[[paper-x]] claims <原文级转述>"
+side_b: "[[paper-y]] claims <相反/不相容结论>"
+same_object: <双方是否在同一现象/指标/population 上冲突——必填，防止把跨域术语歧义当矛盾>
+resolution_type_guess: 真矛盾 | 测量 artifact | 隐藏变量 | 适用域不同
+```
+
+`saturation.md`（饱和度图）三类条目：`crowded`（≥N 篇且新作多为 incremental variant）、`blank`（矩阵/谱系上的空白）、`messy`（饱和且结论互相矛盾，是 unification 种子的富矿）。
+
+硬规则：**field/ 层每条 claim 必须挂 ≥3 篇 wiki 论文出处**——这是「结构性禁止高空 claim」在 compile 侧的分层放行落点。（2026-08-12 起该规则从 prompt 级搬到输出级：`scripts/idea_lint.py` F1 逐条目机械数 [[引用]] ≥3 且去重后 ≥2 个不同目标）
+
+### novelty 审理产物（`wiki/novelty/`）
+
+`ledger.md` 是既判力台账（append-only），条目字段：
+
+```yaml
+{idea, paper, kind: novelty|openness,
+ verdict: identical|transfer|motivation-overlap|component-overlap|crowded|open,
+ evidence: [逐字引文], defense: 一句话摘要, actions_taken: [pivot|reframe|cite|sharpen|story-upgrade],
+ adjudicated_by: judge-agent|human, date, status: standing|superseded|needs-review, supersedes: <entry-ref>|null}
+```
+
+真实台账条目不照抄上面的花括号 flow 速写：各字段逐行 block-style 书写，`defense:` 单独成行——对齐 `scripts/quote_check.py` 按行首 `defense:` 跳过该行的锚定方式。
+
+`status` 三值枚举（本 phase 新增第三值 `needs-review`）：某 idea 卡的 Scope conditions 被实际修改后，相关 `standing` verdict 降级为 `needs-review`（救援阶梯 A 层死后去向条款的配套）；本 phase 只写条文，机械触发（检测 scope 编辑后自动降级）留后续 phase。这是向后兼容扩展——既有条目缺省仍是 `standing`/`superseded` 之一，不受影响，append-only 纪律不回改。`actions_taken` 枚举字面保持 `[pivot|reframe|cite|sharpen|story-upgrade]` 不动：裸词 `pivot` 是历史简写，语义等同 protocol 里新拆分出的 `novelty_pivot`；新条目可继续写 `pivot`，不强制回填改写既有条目。
+
+`kind` 是可选判别字段，缺省时隐式等同 `novelty`——Phase 2/3/4 已写入的既有条目不回填、不失效，这是硬约束（回填会破坏既有 fixture 验收基线）。`verdict` 的取值域按 `kind` 分叉，两套枚举并列而非派生，不得混进同一取值域：
+
+- `kind: novelty`（既有六值）：`identical|transfer|motivation-overlap|component-overlap|crowded|open`。
+- `kind: openness`（新三值）：`problem-open|problem-solved|partially-solved`。
+
+`kind: openness` 条目额外携带两个专属字段：`goal_ref`（指向 `wiki/field/problems/<goal-id>.md`）与 `criteria_delta`（对方满足了我方哪几条 facet，`partially-solved` 时必填）。自 2026-08-12 起 openness 条目另必填 `papers_checked`——逐个列出实际裁决过的 paper id 清单，不收裸数字；去重条数低于备料检查算出的邻域命中数 → 裁决无效。novelty 轨道的 `idea`/`actions_taken` 字段对 openness 条目不适用，留空或省略。
+
+退化开放性裁决只裁两问：Q1 同一性判据按外延化口径（判"对方论文的已报告结果能否满足我方 main facet 的一个实例化"，满足即命中；语句内涵比较只作预筛），Q4 按 F11 标准（对方明文结论句宣称解决）；不裁 Q2/Q3（问题层无机制可比，这是刻意退化而非遗漏）。问题层的主风险方向与方法层相反：**主风险是漏杀**（在已被解决的问题上烧探针），不是误杀。
+
+`fuel.md` 是 ideator 唯一可读的 novelty 产物，只含正向素材，永不含指控，条目字段：
+
+```yaml
+{source_paper, mechanism(带原文一句), transferable_insight, adaptation_hint(迁移中要改什么), cite_required: true|false}
+```
+
 ### 5. 反链（Obsidian 风格）
 
 文件内引用用 `[[filename]]`（不带 `.md`）；paper 结尾列反链；concept frontmatter 列 `related_papers`。
@@ -178,6 +558,10 @@ novelty_verified: false   # 待 ideation 与人工判断
 - ❌ 为没有完整读过的 paper 写笔记，或凭记忆补内容。
 - ❌ 写没有具体出处的空洞综述套话。
 - ❌ 编译时联网搜索内容；外部搜索只能由用户显式触发 `wiki-search-latest`。
+- ❌ 在 Claim 双栏（Hypothesis 栏 / 当前可断言栏）写具体参数量/协议编号——这类数字只能出现在 `## Instantiation & DoF` 并带 DoF 标注（与 `scripts/idea_lint.py` 的 L1 规则呼应）。
+- ❌ 在 Claim「当前可断言」栏写超出当前证据等级上限的断言语气——证据等级由 `## Observation` 的最高锚标签决定（与 `scripts/idea_lint.py` 的 C2/C3 规则呼应）。
+- ❌ 在 goal 卡的问题陈述与 Success criteria 里出现具体方法名（与 `scripts/idea_lint.py` 的 G1 规则呼应）。
+- ❌ idea 卡的 `complexity_tier` 写成绝对分或数值分，只能是四档枚举之一——wiki 内 agent 在 idea 粒度一律禁绝对分，四档是资格判定的产物，不是加权求和（A1 禁令的人读版本，机械抓手见 `docs/ENFORCEMENT-MAP.md`）。
 
 ## GPU OCR 入库管线（本地或远程）
 

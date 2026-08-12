@@ -44,9 +44,9 @@ Interpret an explicit action or infer it from the user's request:
 |---|---|---|
 | `init` | `wiki-init` | Bootstrap or finish initializing a wiki; run once. |
 | `compile` | `wiki-compile` | Diff `raw/`, compile complete sources, synthesize, lint, and log. |
-| `search` | `wiki-search`, `wiki-search-latest` | Research variant only; return verified candidates and wait for import approval. |
-| `critique` | `wiki-critique` | Adversarial, evidence-backed review; never edit. |
-| `ideate` | `wiki-ideate` | Research-only, read-only grounded ideation; return proposals but never apply them or certify novelty. |
+| `search` | `wiki-search`, `wiki-search-latest` | Research variant only; return verified candidates and wait for import approval — unless the instance sets `expansion_mode: auto`, whose standing policy (sponsor + dual caps + `raw/IMPORT-LOG.md`) releases recommended candidates without per-candidate approval; `FROZEN` overrides. |
+| `critique` | `wiki-critique` | Adversarial, evidence-backed review; novelty findings route through the jurisdiction gate, four-question charge, and six-value verdict; append-only to the novelty ledger, otherwise never edit. Idea-card findings are tagged by layer, and idea-card novelty challenges route to the seeded gap instead of a verdict on the card. First clears type jurisdiction — non-`idea` targets (direction/probe/salvage/field) only ever produce a fuel entry. Idea cards additionally clear a Step 0.5 full-trial triage (`complexity_tier`/`trial_track`) that annotates the charge sheet only — the gate spawns no independent agents. |
+| `ideate` | `wiki-ideate` | Research-only, read-only grounded ideation; consumes only `fuel.md`, never produces a novelty verdict; return proposals but never apply them or certify novelty. May produce an idea-card draft; codifying it into `wiki/ideas/` requires a clean `idea_lint.py` pass first. Before advancing a card past `DRAFT` to `INSTANTIATED`, check reinvestment gate ①② (ledger verdict + `[p]` anchor or probe-waiver). |
 | `teach` | `wiki-teach`, legacy `wiki-ask` | Answer from the wiki with source locators; read-only. |
 
 Read [references/actions.md](references/actions.md) and execute only the section

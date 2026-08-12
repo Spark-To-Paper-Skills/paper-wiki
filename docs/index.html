@@ -4,171 +4,325 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>paper-wiki — LLM Wiki for Research & Courses</title>
-<meta name="description" content="A Claude Code and Codex plugin that compiles PDFs and slides into a structured, reverse-linked knowledge base.">
+<meta name="description" content="A Claude Code and Codex plugin that compiles PDFs and slides into a structured, reverse-linked knowledge base — and runs an unattended pipeline from a folder of papers to rated idea cards.">
+<meta property="og:title" content="paper-wiki — LLM Wiki for Research & Courses">
+<meta property="og:description" content="Compile papers into a knowledge graph. Hand /wiki-auto a folder; get rated idea cards. Not RAG — an LLM Wiki.">
+<meta property="og:url" content="https://spark-to-paper-skills.github.io/paper-wiki/">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23D97757' d='M12 1.6c.7 4.5 2 7.3 3.6 8.9 1.6 1.6 4.4 2.9 8.9 3.6-4.5.7-7.3 2-8.9 3.6-1.6 1.6-2.9 4.4-3.6 8.9-.7-4.5-2-7.3-3.6-8.9C6.8 16.5 4 15.2-.5 14.5c4.5-.7 7.3-2 8.9-3.6 1.6-1.6 2.9-4.4 3.6-8.9Z'/%3E%3Ccircle cx='19.6' cy='4.6' r='1.7' fill='%233A8E8C'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+// Resolve the stored theme choice (system | light | dark) before paint.
+(function () {
+  var s = localStorage.getItem("pw-theme");
+  var c = (s === "light" || s === "dark") ? s : "system";
+  var t = c === "system"
+    ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : c;
+  var d = document.documentElement;
+  d.setAttribute("data-theme", t);
+  d.setAttribute("data-theme-choice", c);
+})();
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-primary: #0f172a;
-  --bg-alt: #1e293b;
-  --bg-surface: #334155;
-  --text-primary: #e2e8f0;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  --accent: #38bdf8;
-  --accent-purple: #a78bfa;
-  --accent-green: #34d399;
-  --accent-amber: #fbbf24;
-  --border: rgba(148, 163, 184, 0.1);
-  --border-hover: rgba(56, 189, 248, 0.3);
-  --code-bg: #0d1117;
-  --card-bg: rgba(30, 41, 59, 0.5);
-  --card-hover: rgba(30, 41, 59, 0.8);
+  --blue: #d97757;
+  --blue-deep: #b85c3c;
+  --blue-sky: #e28e69;
+  --blue-pale: #efc0ab;
+  --cyan: #3a8e8c;
+  --green: #16a34a;
+  --red: #e11d48;
+  --role-a: #2f7d7b;
+  --grad-1: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 55%, var(--blue-sky) 100%);
+  --grad-2: linear-gradient(135deg, var(--blue), var(--cyan));
+  --grad-3: linear-gradient(135deg, var(--cyan), var(--blue));
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Noto Sans SC", "PingFang SC", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+  --content-w: 1160px;
+  --prose-w: 78ch;
+  --pad-x: clamp(20px, 3.4vw, 44px);
 }
+
+:root, :root[data-theme=light] {
+  --paper: #f8f9fc;
+  --paper2: #ffffff;
+  --card: #ffffff;
+  --ink: #1e293b;
+  --ink2: #0f172a;
+  --body: #334155;
+  --lede: #475569;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --line2: #cbd5e1;
+  --band: #eef2f8;
+  --nav-bg: rgba(255,255,255,.7);
+  --nav-bg-scrolled: rgba(255,255,255,.92);
+  --nav-border: rgba(226,232,240,.7);
+  --chip-surface: rgba(15,23,42,.04);
+  --bib-bg: #f1f5f9;
+  --blue-on-tint: #a04a28;
+  --code-prompt: #b0512a;
+  --tint-orange: rgba(217,119,87,.09);
+  --tint-teal: rgba(58,142,140,.12);
+  --tint-red: rgba(225,29,72,.08);
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 1px 1px rgba(15,23,42,.04);
+  --shadow-md: 0 8px 24px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.05);
+}
+
+:root[data-theme=dark] {
+  --paper: #0a0b0f;
+  --paper2: #12141b;
+  --card: #14161d;
+  --ink: #e6e9f0;
+  --ink2: #f4f6fb;
+  --body: #c2c9d6;
+  --lede: #aeb6c6;
+  --muted: #8b93a6;
+  --line: #262a35;
+  --line2: #3a4050;
+  --band: #101219;
+  --nav-bg: rgba(18,20,27,.65);
+  --nav-bg-scrolled: rgba(18,20,27,.9);
+  --nav-border: rgba(58,64,80,.7);
+  --chip-surface: rgba(255,255,255,.06);
+  --bib-bg: #0d0f15;
+  --blue-deep: #e89a77;
+  --blue-on-tint: #e89a77;
+  --code-prompt: #e8a184;
+  --role-a: #5cb8b5;
+  --green: #4ade80;
+  --red: #fb7185;
+  --tint-orange: rgba(226,142,105,.12);
+  --tint-teal: rgba(92,184,181,.14);
+  --tint-red: rgba(251,113,133,.1);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4), 0 1px 1px rgba(0,0,0,.3);
+  --shadow-md: 0 8px 24px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35);
+}
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'PingFang SC', sans-serif;
-  background: var(--bg-primary); color: var(--text-primary);
-  line-height: 1.7; -webkit-font-smoothing: antialiased;
+  font-family: var(--font-sans);
+  background: var(--paper); color: var(--ink);
+  line-height: 1.65; font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .25s ease, color .25s ease;
 }
+:root[data-theme=dark] a { color: #e8a184; }
+a { color: var(--blue-deep); }
 
-.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(15,23,42,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
-.nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
-.nav-brand { font-size: 18px; font-weight: 700; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 8px; }
-.nav-brand span { color: var(--accent); }
-.nav-links { display: flex; align-items: center; gap: 8px; list-style: none; }
-.nav-links a { color: var(--text-muted); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; }
-.nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-.nav-links a.gh { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 9999px; padding: 6px 16px; }
-.nav-links a.gh:hover { border-color: var(--border-hover); }
-.lang-switch { display: inline-flex; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-left: 4px; }
-.lang-switch button { border: none; background: transparent; color: var(--text-muted); font-size: 13px; font-weight: 600; padding: 5px 12px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-.lang-switch button.active { background: var(--accent); color: var(--bg-primary); }
-.lang-switch button:hover:not(.active) { color: var(--text-primary); }
-.nav-toggle { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; padding: 8px; }
 [data-lang="en"] { display: none; }
 
-.hero { padding: 140px 1.5rem 80px; text-align: center; position: relative; overflow: hidden; }
-.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse 80% 60% at 50% 20%, rgba(56,189,248,0.08) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 30% 60%, rgba(167,139,250,0.05) 0%, transparent 60%); pointer-events: none; }
-.hero-content { position: relative; max-width: 800px; margin: 0 auto; }
-.hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.15); border-radius: 9999px; padding: 6px 18px; font-size: 13px; font-weight: 500; color: var(--accent); margin-bottom: 28px; }
-.hero h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 20px; }
-.hero h1 .gradient { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-purple) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.hero .tagline { font-size: clamp(1rem, 2vw, 1.2rem); color: var(--text-muted); max-width: 640px; margin: 0 auto 40px; line-height: 1.8; }
-.hero-install { display: inline-block; background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px 28px; text-align: left; max-width: 520px; width: 100%; position: relative; }
-.hero-install code { font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace; font-size: 14px; color: var(--text-primary); display: block; line-height: 1.8; }
-.hero-install .prompt { color: var(--accent-green); user-select: none; }
-.hero-install .copy-btn { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-dim); font-size: 12px; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
-.hero-install .copy-btn:hover { background: rgba(255,255,255,0.12); color: var(--text-muted); }
-.hero-install .copy-btn.copied { background: rgba(52,211,153,0.15); color: var(--accent-green); border-color: rgba(52,211,153,0.3); }
-.hero-links { display: flex; justify-content: center; gap: 16px; margin-top: 28px; flex-wrap: wrap; }
-.hero-links a { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 18px; border-radius: 9999px; border: 1px solid var(--border); transition: all 0.2s; }
-.hero-links a:hover { color: var(--text-primary); border-color: var(--border-hover); background: rgba(255,255,255,0.03); }
+/* ── Topbar ─────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--nav-bg); border-bottom: 1px solid var(--nav-border);
+  backdrop-filter: saturate(160%) blur(16px); -webkit-backdrop-filter: saturate(160%) blur(16px);
+  transition: box-shadow .25s ease, background .25s ease;
+}
+.topbar.scrolled { background: var(--nav-bg-scrolled); box-shadow: var(--shadow-sm); }
+.topbar-inner { max-width: var(--content-w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px var(--pad-x); }
+.brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+.brand svg { flex-shrink: 0; }
+.brand-name { font-size: 1.12rem; font-weight: 800; letter-spacing: -.015em; white-space: nowrap; background: var(--grad-1); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+.nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: var(--r-sm); transition: color .2s, background .2s; }
+.nav-links a:hover { color: var(--ink2); background: var(--chip-surface); }
+.nav-links a.gh { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line2); border-radius: var(--r-pill); padding: 6px 14px; color: var(--body); }
+.nav-links a.gh:hover { border-color: var(--blue); color: var(--ink2); }
+.lang-switch { display: inline-flex; border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--line2); margin-left: 4px; }
+.lang-switch button { border: none; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; padding: 5px 12px; cursor: pointer; transition: all .2s; font-family: inherit; }
+.lang-switch button.active { background: var(--blue); color: #fff; }
+.lang-switch button:hover:not(.active) { color: var(--ink2); }
+.theme-toggle { border: 1px solid var(--line2); background: transparent; color: var(--muted); border-radius: var(--r-sm); padding: 6px 8px; cursor: pointer; display: inline-flex; align-items: center; margin-left: 4px; transition: all .2s; }
+.theme-toggle:hover { color: var(--ink2); border-color: var(--blue); }
+.theme-toggle svg { display: none; }
+:root[data-theme-choice=system] .theme-toggle .icon-sys { display: block; }
+:root[data-theme-choice=light] .theme-toggle .icon-sun { display: block; }
+:root[data-theme-choice=dark] .theme-toggle .icon-moon { display: block; }
+.nav-toggle { display: none; background: none; border: none; color: var(--ink); cursor: pointer; padding: 8px; }
 
-.stats { display: flex; justify-content: center; gap: 48px; padding: 48px 1.5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-.stat { text-align: center; }
-.stat-value { font-size: 28px; font-weight: 800; color: var(--accent); }
-.stat-label { font-size: 13px; color: var(--text-dim); margin-top: 4px; font-weight: 500; }
+/* ── Hero ───────────────────────────────── */
+.hero { padding: clamp(56px, 9vh, 104px) var(--pad-x) clamp(40px, 6vh, 64px); text-align: center; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; inset: 0; background:
+  radial-gradient(ellipse 80% 60% at 50% 12%, var(--tint-orange) 0%, transparent 60%),
+  radial-gradient(ellipse 55% 40% at 22% 68%, var(--tint-teal) 0%, transparent 62%);
+  pointer-events: none; }
+.hero-content { position: relative; max-width: 820px; margin: 0 auto; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--tint-orange); border: 1px solid var(--blue-pale); border-radius: var(--r-pill); padding: 6px 18px; font-size: 13px; font-weight: 600; color: var(--blue-on-tint); margin-bottom: 26px; font-family: var(--font-mono); }
+:root[data-theme=dark] .hero-badge { border-color: rgba(226,142,105,.35); }
+.hero h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.14; margin-bottom: 20px; color: var(--ink2); }
+.hero h1 .gradient { background: var(--grad-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero .tagline { font-size: clamp(1rem, 2vw, 1.15rem); color: var(--lede); max-width: 660px; margin: 0 auto 38px; line-height: 1.8; }
+.hero-install { display: inline-block; background: var(--bib-bg); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px 28px; text-align: left; max-width: 560px; width: 100%; position: relative; box-shadow: var(--shadow-md); }
+.hero-install code { font-family: var(--font-mono); font-size: 14px; color: var(--ink2); display: block; line-height: 1.9; }
+.hero-install .prompt, .code-block .prompt { color: var(--code-prompt); user-select: none; }
+.copy-btn { background: var(--chip-surface); border: 1px solid var(--line2); color: var(--muted); font-size: 12px; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-family: var(--font-mono); transition: all .2s; }
+.copy-btn:hover { color: var(--ink2); border-color: var(--blue); }
+.copy-btn.copied { background: var(--tint-teal); color: var(--role-a); border-color: var(--role-a); }
+.hero-install .copy-btn { position: absolute; top: 12px; right: 12px; }
+.hero-links { display: flex; justify-content: center; gap: 14px; margin-top: 28px; flex-wrap: wrap; }
+.hero-links a { display: inline-flex; align-items: center; gap: 8px; color: var(--body); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 18px; border-radius: var(--r-pill); border: 1px solid var(--line2); background: var(--card); transition: all .2s; box-shadow: var(--shadow-sm); }
+.hero-links a:hover { color: var(--ink2); border-color: var(--blue); }
 
-.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
-.section { padding: 80px 0; border-bottom: 1px solid var(--border); }
-.section:last-of-type { border-bottom: none; }
-.section-label { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
-.section h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; line-height: 1.3; }
-.section p.desc { color: var(--text-muted); font-size: 16px; max-width: 700px; margin-bottom: 20px; line-height: 1.8; }
+/* ── Scoreboard ─────────────────────────── */
+.scoreboard { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--band); }
+.scoreboard-inner { max-width: var(--content-w); margin: 0 auto; padding: 40px var(--pad-x) 30px; display: flex; justify-content: center; gap: clamp(32px, 6vw, 80px); flex-wrap: wrap; }
+.score-item { text-align: center; }
+.score-num { font-family: var(--font-mono); font-size: clamp(1.8rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: -.04em; color: var(--blue); line-height: 1.1; }
+.score-label { font-size: 13px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+.score-caption { max-width: var(--content-w); margin: 0 auto; padding: 0 var(--pad-x) 26px; text-align: center; font-size: 13px; color: var(--muted); font-family: var(--font-mono); }
 
-.concept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
-.concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.2s; }
-.concept-card:hover { border-color: var(--border-hover); background: var(--card-hover); }
-.concept-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-.concept-card .icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; font-size: 18px; }
-.concept-card.rag .icon { background: rgba(239,68,68,0.12); }
-.concept-card.wiki .icon { background: rgba(56,189,248,0.12); }
+/* ── Sections ───────────────────────────── */
+.band { background: var(--band); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.band + .band, .scoreboard + .band { border-top: 0; }
+.section { max-width: var(--content-w); margin: 0 auto; padding: clamp(52px, 8vh, 80px) var(--pad-x) clamp(40px, 6vh, 60px); }
+.section-header { display: grid; grid-template-columns: 86px 1fr; column-gap: 24px; align-items: start; padding-top: 16px; margin-bottom: 36px; border-top: 2px solid var(--ink2); }
+.section-eyebrow { display: flex; flex-direction: column; gap: 6px; }
+.eyebrow-num { font-family: var(--font-mono); font-size: clamp(2rem, 3.4vw, 2.6rem); font-weight: 700; line-height: .9; letter-spacing: -.04em; color: var(--blue); }
+.eyebrow-name { font-size: .78rem; font-weight: 700; line-height: 1.25; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+.section-header h2 { grid-column: 2; font-size: clamp(1.55rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -.025em; line-height: 1.25; color: var(--ink2); margin-bottom: 10px; }
+.section-lede { grid-column: 2; font-size: 1.02rem; line-height: 1.72; color: var(--lede); max-width: var(--prose-w); margin: 0; }
+.section p.desc { color: var(--lede); font-size: 15.5px; max-width: var(--prose-w); margin: 14px 0 0; line-height: 1.75; }
+
+/* ── Cards & grids ──────────────────────── */
+.concept-grid, .duo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 30px; }
+.concept-card, .duo-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 26px 28px; box-shadow: var(--shadow-sm); transition: box-shadow .2s, border-color .2s; position: relative; overflow: hidden; }
+.concept-card:hover, .duo-card:hover { box-shadow: var(--shadow-md); border-color: var(--line2); }
+.concept-card h3, .duo-card h3 { font-size: 16.5px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; color: var(--ink2); }
+.concept-card .icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; font-size: 17px; flex-shrink: 0; }
+.concept-card.rag .icon { background: var(--tint-red); }
+.concept-card.wiki .icon { background: var(--tint-orange); }
 .concept-card ul { list-style: none; }
-.concept-card li { padding: 5px 0; font-size: 14px; color: var(--text-muted); display: flex; align-items: flex-start; gap: 10px; line-height: 1.6; }
+.concept-card li { padding: 5px 0; font-size: 14px; color: var(--body); display: flex; align-items: flex-start; gap: 10px; line-height: 1.6; }
 .concept-card li::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-top: 9px; flex-shrink: 0; }
-.concept-card.rag li::before { background: #ef4444; }
-.concept-card.wiki li::before { background: var(--accent); }
+.concept-card.rag li::before { background: var(--red); }
+.concept-card.wiki li::before { background: var(--blue); }
+.duo-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--grad-2); }
+.duo-card.teal::before { background: var(--grad-3); }
+.duo-card p { font-size: 14.5px; color: var(--body); line-height: 1.72; }
+.duo-card p + p { margin-top: 10px; }
+.duo-card code, .section p.desc code, .tip code, .step p code, .recon-list code { font-family: var(--font-mono); font-size: .88em; background: var(--tint-orange); color: var(--blue-on-tint); padding: 1px 6px; border-radius: 5px; }
 
-.variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
-.variant-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 32px; position: relative; overflow: hidden; transition: all 0.2s; }
-.variant-card:hover { border-color: var(--border-hover); }
+/* steps row */
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 34px; border-top: 1px solid var(--line); }
+.step { position: relative; padding: 18px 20px 6px 0; }
+.step + .step { padding-left: 20px; border-left: 1px solid var(--line); }
+.step::before { content: ''; position: absolute; top: -1px; left: 0; width: 30px; height: 2px; background: var(--blue); }
+.step + .step::before { left: 20px; }
+.step strong { display: block; font-size: 14.5px; color: var(--ink2); margin-bottom: 6px; }
+.step p { font-size: 13.5px; color: var(--body); line-height: 1.65; }
+
+/* recon list */
+.recon-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 28px; counter-reset: recon; list-style: none; }
+.recon-list li { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 16px; font-size: 13.5px; color: var(--body); line-height: 1.55; box-shadow: var(--shadow-sm); }
+.recon-list li::before { counter-increment: recon; content: counter(recon); display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--tint-orange); color: var(--blue-on-tint); font-family: var(--font-mono); font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+.recon-list li span { display: block; }
+
+/* variants */
+.variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 30px; }
+.variant-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 28px 30px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow .2s; }
+.variant-card:hover { box-shadow: var(--shadow-md); }
 .variant-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-.variant-card.research::before { background: linear-gradient(90deg, var(--accent-green), var(--accent)); }
-.variant-card.course::before { background: linear-gradient(90deg, var(--accent-purple), var(--accent)); }
-.variant-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-.variant-card .sub { font-size: 14px; color: var(--text-dim); margin-bottom: 20px; }
+.variant-card.research::before { background: var(--grad-2); }
+.variant-card.course::before { background: var(--grad-3); }
+.variant-card h3 { font-size: 19px; font-weight: 800; margin-bottom: 4px; color: var(--ink2); font-family: var(--font-mono); letter-spacing: -.02em; }
+.variant-card .sub { font-size: 14px; color: var(--muted); margin-bottom: 18px; }
 .variant-card table { width: 100%; font-size: 14px; border-collapse: collapse; }
-.variant-card td { padding: 8px 0; border-top: 1px solid var(--border); vertical-align: top; color: var(--text-muted); }
-.variant-card td:first-child { font-weight: 600; color: var(--text-dim); white-space: nowrap; padding-right: 16px; width: 100px; }
-.variant-card code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); }
+.variant-card td { padding: 8px 0; border-top: 1px solid var(--line); vertical-align: top; color: var(--body); }
+.variant-card td:first-child { font-weight: 600; color: var(--muted); white-space: nowrap; padding-right: 16px; width: 96px; }
+.variant-card code { font-family: var(--font-mono); font-size: 13px; color: var(--blue-on-tint); }
 
-.code-block { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; margin: 20px 0; overflow: hidden; }
-.code-block-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border); }
-.code-block-label { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
-.code-block .copy-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-dim); font-size: 12px; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
-.code-block .copy-btn:hover { background: rgba(255,255,255,0.12); color: var(--text-muted); }
-.code-block .copy-btn.copied { background: rgba(52,211,153,0.15); color: var(--accent-green); border-color: rgba(52,211,153,0.3); }
-.code-block pre { padding: 16px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; line-height: 1.7; color: var(--text-primary); }
-.code-block .prompt { color: var(--accent-green); user-select: none; }
-.code-block .comment { color: var(--text-dim); }
-.code-block .flag { color: var(--accent); }
-.code-block .string { color: var(--accent-purple); }
+/* code blocks */
+.code-block { position: relative; background: var(--bib-bg); border: 1px solid var(--line); border-radius: var(--r-md); margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-sm); }
+.code-block-header { display: flex; justify-content: space-between; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--line); background: var(--paper2); }
+.code-block-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-family: var(--font-mono); }
+.code-block pre { padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 13.5px; line-height: 1.75; color: var(--ink2); }
+.code-block .comment { color: var(--muted); }
+.code-block .flag { color: var(--cyan); }
+.code-block .string { color: var(--blue-deep); }
+.code-block .stop { color: var(--red); font-weight: 700; }
 
+/* command table */
 .cmd-table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 15px; }
-.cmd-table thead th { text-align: left; padding: 12px 16px; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); border-bottom: 1px solid var(--border); }
-.cmd-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-muted); }
+.cmd-table thead th { text-align: left; padding: 12px 16px; font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 2px solid var(--ink2); }
+.cmd-table tbody td { padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
 .cmd-table tbody tr:last-child td { border-bottom: none; }
-.cmd-table tbody tr:hover { background: rgba(255,255,255,0.02); }
-.cmd-table code { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: rgba(56,189,248,0.08); color: var(--accent); padding: 2px 8px; border-radius: 5px; white-space: nowrap; }
-.cmd-table .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; background: rgba(52,211,153,0.1); color: var(--accent-green); }
+.cmd-table tbody tr:hover { background: var(--chip-surface); }
+.cmd-table code { font-family: var(--font-mono); font-size: 13px; background: var(--tint-orange); color: var(--blue-on-tint); padding: 2px 8px; border-radius: 5px; white-space: nowrap; }
+.cmd-table .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 6px; vertical-align: middle; background: var(--tint-teal); color: var(--role-a); font-family: var(--font-mono); }
+.cmd-table .tag.auto { background: var(--tint-orange); color: var(--blue-on-tint); }
 
-.file-tree { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; margin-top: 24px; font-size: 14px; line-height: 2.1; }
-.file-tree code { font-family: 'JetBrains Mono', monospace; }
-.file-tree .dir { color: var(--accent); font-weight: 600; }
-.file-tree .desc { color: var(--text-dim); margin-left: 8px; }
+/* file tree */
+.file-tree { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 24px 28px; margin-top: 24px; font-size: 14px; line-height: 2.05; box-shadow: var(--shadow-sm); overflow-x: auto; }
+.file-tree code { font-family: var(--font-mono); }
+.file-tree .dir { color: var(--blue-on-tint); font-weight: 700; }
+.file-tree .desc { color: var(--muted); margin-left: 8px; }
 
-.tip { background: rgba(56,189,248,0.06); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; font-size: 14px; color: var(--text-muted); line-height: 1.7; }
-.tip strong { color: var(--text-primary); }
+/* tip */
+.tip { background: var(--tint-orange); border-left: 3px solid var(--blue); border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 15px 20px; margin: 20px 0; font-size: 14px; color: var(--body); line-height: 1.7; }
+.tip strong { color: var(--ink2); }
 
-.footer { border-top: 1px solid var(--border); padding: 48px 1.5rem; text-align: center; color: var(--text-dim); font-size: 14px; line-height: 2; }
-.footer a { color: var(--accent); text-decoration: none; }
+/* footer */
+.footer { border-top: 1px solid var(--line); background: var(--band); padding: 48px var(--pad-x); text-align: center; color: var(--muted); font-size: 14px; line-height: 2.1; }
+.footer a { color: var(--blue-deep); text-decoration: none; }
 .footer a:hover { text-decoration: underline; }
-.footer-sep { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--bg-surface); margin: 0 12px; vertical-align: middle; }
+.footer-sep { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--line2); margin: 0 12px; vertical-align: middle; }
+.footer .org-line { margin-top: 6px; font-size: 13.5px; }
 
+.variant-grid.tri { grid-template-columns: 1fr 1fr 1fr; }
+
+/* responsive */
+@media (max-width: 900px) {
+  .steps, .recon-list { grid-template-columns: 1fr 1fr; }
+  .steps .step { border-left: none; padding-left: 0; border-top: 1px solid var(--line); }
+  .steps .step::before { left: 0; }
+}
 @media (max-width: 768px) {
-  .hero { padding: 120px 1rem 60px; }
-  .concept-grid, .variant-grid { grid-template-columns: 1fr; }
-  .section { padding: 56px 0; }
-  .stats { gap: 32px; }
+  .hero { padding-top: 48px; }
+  .concept-grid, .duo-grid, .variant-grid, .variant-grid.tri { grid-template-columns: 1fr; }
+  .section-header { grid-template-columns: 1fr; row-gap: 8px; }
+  .section-eyebrow { flex-direction: row; align-items: baseline; gap: 12px; }
+  .eyebrow-num { font-size: 1.6rem; }
+  .section-header h2, .section-lede { grid-column: 1; }
   .hero-install { padding: 16px 18px; }
-  .hero-install code { font-size: 12.5px; }
-  .nav-links { display: none; position: absolute; top: 64px; left: 0; right: 0; background: rgba(15,23,42,0.95); backdrop-filter: blur(16px); flex-direction: column; padding: 16px; border-bottom: 1px solid var(--border); }
+  .hero-install code { font-size: 12px; }
+  .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--nav-bg-scrolled); backdrop-filter: blur(16px); flex-direction: column; align-items: stretch; padding: 16px; border-bottom: 1px solid var(--line); }
   .nav-links.open { display: flex; }
   .nav-toggle { display: block; }
   .cmd-table thead { display: none; }
   .cmd-table tbody td { display: block; padding: 8px 12px; }
   .cmd-table tbody td:first-child { padding-top: 16px; font-weight: 700; border-bottom: none; }
-  .cmd-table tbody tr { border-bottom: 1px solid var(--border); }
+  .cmd-table tbody tr { border-bottom: 1px solid var(--line); display: block; }
+}
+@media (max-width: 560px) {
+  .steps, .recon-list { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
 
-<nav class="nav">
-  <div class="nav-inner">
-    <a class="nav-brand" href="#">📚 <span>paper-wiki</span></a>
-    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+<header class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="#D97757" d="M12 1.6c.7 4.5 2 7.3 3.6 8.9 1.6 1.6 4.4 2.9 8.9 3.6-4.5.7-7.3 2-8.9 3.6-1.6 1.6-2.9 4.4-3.6 8.9-.7-4.5-2-7.3-3.6-8.9C6.8 16.5 4 15.2-.5 14.5c4.5-.7 7.3-2 8.9-3.6 1.6-1.6 2.9-4.4 3.6-8.9Z"/><circle cx="19.6" cy="4.6" r="1.7" fill="#3A8E8C"/></svg>
+      <span class="brand-name">paper-wiki</span>
+    </a>
+    <button class="nav-toggle" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">
       <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
-    <div class="nav-links">
+    <nav class="nav-links">
       <a href="#concept" data-lang="zh">核心理念</a>
       <a href="#concept" data-lang="en">Concept</a>
-      <a href="#variants" data-lang="zh">变体</a>
-      <a href="#variants" data-lang="en">Variants</a>
+      <a href="#auto" data-lang="zh">自动流水线</a>
+      <a href="#auto" data-lang="en">Auto Pipeline</a>
       <a href="#install" data-lang="zh">安装</a>
       <a href="#install" data-lang="en">Install</a>
       <a href="#commands" data-lang="zh">命令</a>
@@ -185,17 +339,22 @@ body {
         <button id="btn-zh" class="active" onclick="setLang('zh')">中文</button>
         <button id="btn-en" onclick="setLang('en')">EN</button>
       </div>
-    </div>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Theme" title="Theme: system / light / dark" onclick="cycleTheme()">
+        <svg class="icon-sys" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>
+      </button>
+    </nav>
   </div>
-</nav>
+</header>
 
 <section class="hero">
   <div class="hero-content">
     <div class="hero-badge">Claude Code + Codex · MIT License</div>
     <h1 data-lang="zh">把论文编译成<span class="gradient">知识图谱</span></h1>
-    <p class="tagline" data-lang="zh">让 Claude Code 或 Codex 逐页读完论文与课程材料，编译成结构化、双向链接的知识库——不是 RAG，是 LLM Wiki。</p>
+    <p class="tagline" data-lang="zh">Claude Code 或 Codex 把论文与课件逐页真读完，编译成结构化、双向链接的知识库；再把整个文件夹交给 <code style="font-family:var(--font-mono);font-size:.92em">/wiki-auto</code>——睡一觉，醒来收获带四档评级的 idea 卡。不是 RAG，是 LLM Wiki。</p>
     <h1 data-lang="en">Compile Papers into a <span class="gradient">Knowledge Graph</span></h1>
-    <p class="tagline" data-lang="en">A Claude Code and Codex plugin that reads every page of your PDFs and slides, compiles cited notes, and synthesizes cross-source concepts — not RAG, an LLM Wiki.</p>
+    <p class="tagline" data-lang="en">A Claude Code and Codex plugin that actually reads every page of your PDFs and slides, compiles cited notes, and synthesizes cross-source concepts. Then hand <code style="font-family:var(--font-mono);font-size:.92em">/wiki-auto</code> a whole folder of papers — come back to idea cards rated on a four-tier scale, fully unattended. Not RAG — an LLM Wiki.</p>
     <div class="hero-install">
       <button class="copy-btn" onclick="copyCode(this)">Copy</button>
       <code><span class="prompt">&gt; </span>/plugin marketplace add Spark-To-Paper-Skills/paper-wiki</code>
@@ -220,41 +379,48 @@ body {
   </div>
 </section>
 
-<div class="stats">
-  <div class="stat" data-lang="zh"><div class="stat-value">6</div><div class="stat-label">核心 Action</div></div>
-  <div class="stat" data-lang="zh"><div class="stat-value">3</div><div class="stat-label">Sub-agent</div></div>
-  <div class="stat" data-lang="zh"><div class="stat-value">2</div><div class="stat-label">变体（科研 / 课程）</div></div>
-  <div class="stat" data-lang="zh"><div class="stat-value">GPU</div><div class="stat-label">OCR（本地 / 远程）</div></div>
-  <div class="stat" data-lang="en"><div class="stat-value">6</div><div class="stat-label">Core Actions</div></div>
-  <div class="stat" data-lang="en"><div class="stat-value">3</div><div class="stat-label">Sub-agents</div></div>
-  <div class="stat" data-lang="en"><div class="stat-value">2</div><div class="stat-label">Variants (research / course)</div></div>
-  <div class="stat" data-lang="en"><div class="stat-value">GPU</div><div class="stat-label">OCR (local / remote)</div></div>
+<div class="scoreboard">
+  <div class="scoreboard-inner">
+    <div class="score-item" data-lang="zh"><div class="score-num">7</div><div class="score-label">核心 Action（含 AUTO）</div></div>
+    <div class="score-item" data-lang="zh"><div class="score-num">4</div><div class="score-label">Sub-agent</div></div>
+    <div class="score-item" data-lang="zh"><div class="score-num">2</div><div class="score-label">变体（科研 / 课程）</div></div>
+    <div class="score-item" data-lang="zh"><div class="score-num">GPU</div><div class="score-label">OCR（本地 / 远程）</div></div>
+    <div class="score-item" data-lang="en"><div class="score-num">7</div><div class="score-label">Core actions (incl. AUTO)</div></div>
+    <div class="score-item" data-lang="en"><div class="score-num">4</div><div class="score-label">Sub-agents</div></div>
+    <div class="score-item" data-lang="en"><div class="score-num">2</div><div class="score-label">Variants (research / course)</div></div>
+    <div class="score-item" data-lang="en"><div class="score-num">GPU</div><div class="score-label">OCR (local / remote)</div></div>
+  </div>
+  <div class="score-caption" data-lang="zh">sub-agent：wiki-searcher · wiki-critic · wiki-ideator · wiki-cartographer</div>
+  <div class="score-caption" data-lang="en">sub-agents: wiki-searcher · wiki-critic · wiki-ideator · wiki-cartographer</div>
 </div>
 
-<div class="container">
+<main>
+
+  <!-- 01 Concept -->
   <section class="section" id="concept">
-    <div data-lang="zh">
-      <p class="section-label">核心理念</p>
-      <h2>LLM Wiki，不是 RAG</h2>
-      <p class="desc">RAG 每次提问都临时检索文本片段再拼答案，质量取决于切分和召回；paper-wiki 反过来——Claude 事先把每篇源文献从头读到尾，写成带引用的结构化笔记，再跨源综合出概念条目和研究空白。编译好的 wiki 本身就是产出，用 Obsidian 打开就是一张知识图谱。</p>
-    </div>
-    <div data-lang="en">
-      <p class="section-label">Core Concept</p>
-      <h2>LLM Wiki, not RAG</h2>
-      <p class="desc">RAG retrieves text chunks at query time and stitches an answer on the fly. paper-wiki takes the opposite approach: Claude reads every source page-by-page upfront, writes structured notes with citations, then synthesizes cross-source concepts and research gaps. The compiled wiki is the product — it opens as a knowledge graph in Obsidian.</p>
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">01</span>
+        <span class="eyebrow-name" data-lang="zh">核心理念</span>
+        <span class="eyebrow-name" data-lang="en">Core Concept</span>
+      </div>
+      <h2 data-lang="zh">LLM Wiki，不是 RAG</h2>
+      <h2 data-lang="en">LLM Wiki, not RAG</h2>
+      <p class="section-lede" data-lang="zh">RAG 每次提问都临时检索文本片段再拼答案，质量取决于切分和召回；paper-wiki 反过来——Claude 事先把每篇源文献从头读到尾，写成带引用的结构化笔记，再跨源综合出概念条目和研究空白。编译好的 wiki 本身就是产出，用 Obsidian 打开就是一张知识图谱。</p>
+      <p class="section-lede" data-lang="en">RAG retrieves text chunks at query time and stitches an answer on the fly. paper-wiki takes the opposite approach: Claude reads every source page-by-page upfront, writes structured notes with citations, then synthesizes cross-source concepts and research gaps. The compiled wiki is the product — it opens as a knowledge graph in Obsidian.</p>
     </div>
     <div class="concept-grid">
       <div class="concept-card rag">
         <h3 data-lang="zh"><span class="icon">🔍</span> RAG（检索再生成）</h3>
-        <h3 data-lang="en"><span class="icon">🔍</span> RAG (Retrieve & Generate)</h3>
+        <h3 data-lang="en"><span class="icon">🔍</span> RAG (Retrieve &amp; Generate)</h3>
         <ul>
           <li data-lang="zh">入库时切分文档</li><li data-lang="zh">每次提问临时检索片段</li><li data-lang="zh">质量取决于切分和召回</li><li data-lang="zh">没有持久化的知识结构</li>
-          <li data-lang="en">Chunks documents at ingest time</li><li data-lang="en">Retrieves fragments per query</li><li data-lang="en">Quality depends on chunking & recall</li><li data-lang="en">No persistent knowledge structure</li>
+          <li data-lang="en">Chunks documents at ingest time</li><li data-lang="en">Retrieves fragments per query</li><li data-lang="en">Quality depends on chunking &amp; recall</li><li data-lang="en">No persistent knowledge structure</li>
         </ul>
       </div>
       <div class="concept-card wiki">
         <h3 data-lang="zh"><span class="icon">📖</span> LLM Wiki（先编译，后查询）</h3>
-        <h3 data-lang="en"><span class="icon">📖</span> LLM Wiki (Compile & Query)</h3>
+        <h3 data-lang="en"><span class="icon">📖</span> LLM Wiki (Compile &amp; Query)</h3>
         <ul>
           <li data-lang="zh">逐页通读每篇源文献</li><li data-lang="zh">写带引用的结构化笔记</li><li data-lang="zh">跨源综合概念条目</li><li data-lang="zh">持久化、双向链接的图谱</li>
           <li data-lang="en">Reads every page end-to-end</li><li data-lang="en">Writes cited, structured notes</li><li data-lang="en">Cross-source concept synthesis</li><li data-lang="en">Persistent, reverse-linked graph</li>
@@ -263,35 +429,202 @@ body {
     </div>
   </section>
 
-  <!-- ══ Workflow ══ -->
-  <section class="section" id="workflow">
-    <div data-lang="zh">
-      <p class="section-label">工作流</p>
-      <h2>编译 → 审查 → 发现 → 深入理解</h2>
-      <p class="desc">Scope fence 守住边界（核心聚焦 / 相邻可纳入 / 硬排除），lifecycle 控制节奏（BUILDING → ACTIVE → FROZEN）。</p>
+  <!-- 02 Auto pipeline -->
+  <div class="band">
+  <section class="section" id="auto">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">02</span>
+        <span class="eyebrow-name" data-lang="zh">自动流水线</span>
+        <span class="eyebrow-name" data-lang="en">Auto Pipeline</span>
+      </div>
+      <h2 data-lang="zh">/wiki-auto：文件夹进，带评级的 idea 卡出</h2>
+      <h2 data-lang="en">/wiki-auto: a folder in, rated idea cards out</h2>
+      <p class="section-lede" data-lang="zh">把一个装满源论文的文件夹交给 <code>/wiki-auto</code>，链条无人值守地跑完：入库 → 批量 GPU OCR → 分批编译 → 目标采纳（problems.md）→ 方向卡 → P0 纯 prompt 探针 → 四档评级的 idea 卡 → 查新审查。它只做编排，不定义任何新的 schema 或判断规则。</p>
+      <p class="section-lede" data-lang="en">Hand <code>/wiki-auto</code> a folder of source papers and the chain runs unattended: ingest → mass GPU OCR → batched compile → goal adoption (problems.md) → direction cards → P0 prompt-only probes → idea cards with four-tier ratings → novelty critique. It orchestrates only — it defines no new schema or judgment rule of its own.</p>
     </div>
-    <div data-lang="en">
-      <p class="section-label">Workflow</p>
-      <h2>Compile → Critique → Ideate → Understand</h2>
-      <p class="desc">Scope fence guards boundaries (core focus / adjacent OK / exclusions). Lifecycle controls pace (BUILDING → ACTIVE → FROZEN).</p>
+    <div class="code-block" data-lang="zh">
+      <div class="code-block-header"><span class="code-block-label">/wiki-auto 环节链</span></div>
+      <pre><code>文件夹（源论文）
+  → 入库 raw/  → 批量 GPU OCR  → 分批 /wiki-compile
+  → 目标采纳（field/problems.md）  → 方向卡
+  → P0 探针（仅 prompt）  → idea 卡（四档评级）  → 查新审查
+  <span class="stop">■ STOP</span> 止于评级：不越过 SCORED，不跑 P1/P2 实验，不导出论文</code></pre>
     </div>
-    <div class="code-block">
-      <div class="code-block-header"><span class="code-block-label" data-lang="zh">研究工作流</span><span class="code-block-label" data-lang="en">Research workflow</span></div>
-      <pre><code>/wiki-init → import → /wiki-compile → /wiki-critique → /wiki-ideate
-                              ↓                              ↓
-                        /wiki-search-latest ←── coverage gaps ┘
-                              ↓
-                        /wiki-compile → /wiki-teach (deep understanding)</code></pre>
+    <div class="code-block" data-lang="en">
+      <div class="code-block-header"><span class="code-block-label">/wiki-auto stage chain</span></div>
+      <pre><code>folder of source papers
+  → ingest raw/  → mass GPU OCR  → batched /wiki-compile
+  → goal adoption (field/problems.md)  → direction cards
+  → P0 prompt-only probes  → idea cards (four-tier rating)  → novelty critique
+  <span class="stop">■ STOP</span> stops at ratings: never past SCORED, no P1/P2 runs, no paper export</code></pre>
+    </div>
+    <div class="steps">
+      <div class="step" data-lang="zh"><strong>一个文件夹进</strong><p>指着装满 PDF 的目录跑一条命令，其余交给链条，逐环节留痕。</p></div>
+      <div class="step" data-lang="zh"><strong>无人值守</strong><p>OCR、编译、目标采纳、方向卡、探针、评级、查新，一路自动接力。</p></div>
+      <div class="step" data-lang="zh"><strong>止于评级</strong><p>绝不把卡片推过 SCORED，绝不跑 P1/P2 实验，绝不导出论文。</p></div>
+      <div class="step" data-lang="zh"><strong>Fail closed</strong><p>前置不满足就干净地停：实例未初始化、scope fence 未开 <code>expansion_mode: auto</code>、GPU 忙或缺，都不硬跑，绝无 CPU 兜底。</p></div>
+      <div class="step" data-lang="en"><strong>One folder in</strong><p>Point one command at a directory of PDFs; the chain does the rest, leaving a trace at every stage.</p></div>
+      <div class="step" data-lang="en"><strong>Unattended</strong><p>OCR, compile, goal adoption, direction cards, probes, ratings, novelty critique — one automatic relay.</p></div>
+      <div class="step" data-lang="en"><strong>Stops at ratings</strong><p>Never advances a card past SCORED, never runs P1/P2 experiments, never exports papers.</p></div>
+      <div class="step" data-lang="en"><strong>Fail closed</strong><p>Unmet preconditions mean a clean stop: uninitialized instance, scope fence without <code>expansion_mode: auto</code>, busy or missing GPU — no forcing, never a CPU fallback.</p></div>
+    </div>
+  </section>
+  </div>
+
+  <!-- 03 INBOX + machine signing -->
+  <section class="section" id="inbox">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">03</span>
+        <span class="eyebrow-name" data-lang="zh">机器决策</span>
+        <span class="eyebrow-name" data-lang="en">Machine Decisions</span>
+      </div>
+      <h2 data-lang="zh">每个机器决策落一行，人保留事后否决</h2>
+      <h2 data-lang="en">Every machine decision lands one row. The human keeps post-hoc veto.</h2>
+      <p class="section-lede" data-lang="zh">自动运行不靠「等人审批」推进，靠「全量留痕 + 事后翻案」兜底：信任是显式给出的，监督从事前审批移到事后否决。</p>
+      <p class="section-lede" data-lang="en">Auto runs do not advance by waiting for approval. They are backstopped by full traces plus after-the-fact reversal: trust is explicit, and oversight moves from pre-approval to post-hoc veto.</p>
+    </div>
+    <div class="duo-grid">
+      <div class="duo-card">
+        <h3 data-lang="zh">📥 INBOX 机器决策收件箱</h3>
+        <h3 data-lang="en">📥 The INBOX of machine decisions</h3>
+        <p data-lang="zh"><code>wiki/INBOX.md</code> 是一张只追加的表：<code>| 日期 | 环节 | 对象 | 事项 | 状态 |</code>。每个机器决策——包括终局性的：判死、豁免、查新裁定、生命周期裁定——都落一行，外加原有台账字段，签名 <code>auto</code>+日期，如实标注「机采标注」。</p>
+        <p data-lang="zh">状态取 <code>待人 / 已阅 / 翻案</code> 三值；翻案配翻案回执。人否决一个决策不需要任何新机制——正常编辑文件即可。</p>
+        <p data-lang="en"><code>wiki/INBOX.md</code> is an append-only table: <code>| 日期 | 环节 | 对象 | 事项 | 状态 |</code> (date / stage / object / matter / status). Every machine decision — including final ones: kills, waivers, novelty verdicts, lifecycle rulings — lands one row plus its existing ledger fields, signed <code>auto</code>+date and honestly marked as machine-annotated.</p>
+        <p data-lang="en">Status is <code>pending / seen / reversed</code>; reversals get receipts. Vetoing a decision needs no new mechanism — the human simply edits the file.</p>
+      </div>
+      <div class="duo-card teal">
+        <h3 data-lang="zh">✍️ 全量机签 + 事后否决</h3>
+        <h3 data-lang="en">✍️ Machine signing with post-hoc veto</h3>
+        <p data-lang="zh">原先五类只许人签的不可逆决定，在 auto 运行下获得例外：机器自签，但留痕是硬性要求——INBOX 行 + 既有台账字段 + <code>auto</code>+日期签名，缺一不可。</p>
+        <p data-lang="zh">值守模式的语义不变。信任放出去了，但每一笔都能翻案。</p>
+        <p data-lang="en">The former five human-only irreversibles gain an auto-run exception: the machine signs them itself, with trace as the one hard requirement — INBOX row + existing ledger fields + <code>auto</code>+date signature, all mandatory.</p>
+        <p data-lang="en">Attended-mode semantics are unchanged. Trust is granted — and every single call remains reversible.</p>
+      </div>
     </div>
   </section>
 
+  <!-- 04 Gate + fresh eyes -->
+  <div class="band">
+  <section class="section" id="gate">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">04</span>
+        <span class="eyebrow-name" data-lang="zh">投入闸门</span>
+        <span class="eyebrow-name" data-lang="en">Investment Gate</span>
+      </div>
+      <h2 data-lang="zh">查新·实据闸 与 Fresh-eyes 双检查点</h2>
+      <h2 data-lang="en">The novelty-check &amp; hard-evidence gate, plus fresh-eyes checkpoints</h2>
+      <p class="section-lede" data-lang="zh">越终局的决定，越值得一双没看过前情的眼睛。投入实验前有一道硬闸；评级与判死各配一个必须换上下文才有效的工件。</p>
+      <p class="section-lede" data-lang="en">The more final the decision, the more it deserves a fresh pair of eyes. A hard gate guards experiment investment; ratings and kill rulings each require an artifact that is only valid when produced in a fresh context.</p>
+    </div>
+    <div class="duo-grid">
+      <div class="duo-card">
+        <h3 data-lang="zh">🚧 查新·实据闸</h3>
+        <h3 data-lang="en">🚧 Novelty-check &amp; hard-evidence gate</h3>
+        <p data-lang="zh">投入实验前必须过两道：① <strong>查新已裁定</strong>——<code>wiki/novelty/ledger.md</code> 里有六值裁定记录，证明裁定跑过（不要求特定结论）；② <strong>问题实据在手</strong>——卡片带 <code>[p]</code> 探针锚点，或有一条已签署的豁免。</p>
+        <p data-lang="zh"><code>/wiki-auto</code> 明确停在闸前：闸守的是实验投入，不在它的命令范围内。</p>
+        <p data-lang="en">Two checks before experiment investment: ① <strong>adjudication ran</strong> — a six-value ledger entry exists in <code>wiki/novelty/ledger.md</code> (proof the adjudication happened, not a required verdict); ② <strong>problem evidence in hand</strong> — the card carries a <code>[p]</code> probe anchor, or a signed waiver line exists.</p>
+        <p data-lang="en"><code>/wiki-auto</code> stops before this gate: it guards experiment investment, outside the command's range.</p>
+      </div>
+      <div class="duo-card teal">
+        <h3 data-lang="zh">👀 Fresh-eyes 双检查点</h3>
+        <h3 data-lang="en">👀 Two fresh-eyes checkpoints</h3>
+        <p data-lang="zh"><strong>评级</strong>在只喂卡片文件的全新上下文里跑，落盘 <code>wiki/ideas/&lt;id&gt;.tiering.md</code>；缺这份工件的 SCORED 卡视同未评级。<strong>判死</strong>需要全新上下文的反方复核，落盘 <code>&lt;id&gt;.counter.md</code>。</p>
+        <p data-lang="zh">与主流程同一 commit 提交的工件一律无效——git 时间线可机械核查。</p>
+        <p data-lang="en"><strong>Tiering</strong> runs in a fresh context fed only the card file, landing <code>wiki/ideas/&lt;id&gt;.tiering.md</code>; a SCORED card without it counts as unrated. <strong>Retirement</strong> requires a fresh-context counter-review landing <code>&lt;id&gt;.counter.md</code>.</p>
+        <p data-lang="en">Artifacts committed together with main-flow output are void — the git timeline makes this mechanically checkable.</p>
+      </div>
+    </div>
+    <div class="tip" data-lang="zh"><strong>既有机制不变：</strong>六值查新裁定、「没有判死型 verdict」、goal → direction → probe → idea 螺旋都是原有机制；闸门只是把它们变成投入实验前的硬性前置。</div>
+    <div class="tip" data-lang="en"><strong>Pre-existing machinery unchanged:</strong> six-value novelty verdicts, "there is no kill verdict", and the goal → direction → probe → idea spiral all predate this gate — the gate simply makes them hard preconditions for experiment investment.</div>
+  </section>
+  </div>
+
+  <!-- 05 Observability -->
+  <section class="section" id="observability">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">05</span>
+        <span class="eyebrow-name" data-lang="zh">可观测性</span>
+        <span class="eyebrow-name" data-lang="en">Observability</span>
+      </div>
+      <h2 data-lang="zh">八行对账，缺一行就不算收束</h2>
+      <h2 data-lang="en">Eight-row reconciliation — a missing row means the run is not closed</h2>
+      <p class="section-lede" data-lang="zh">每次 auto 运行以固定的八行对账块收尾：每个声称的数字旁边都放一条可重跑的 <code>grep</code>/<code>ls</code>，任何人随手验证。缺任何一行、或数字对不上又没有解释，这次运行就不算收束。运行开场还会扫描 INBOX 里新出现的「翻案」行，逐条补翻案回执——只记录，绝不自动改回。</p>
+      <p class="section-lede" data-lang="en">Every auto run closes with a fixed eight-row reconciliation block: each claimed number sits next to a re-runnable <code>grep</code>/<code>ls</code> anyone can verify on the spot. A missing row — or a mismatched number without an explanation — means the run does not count as closed. Each run also opens by scanning the INBOX for new reversal rows and appending a receipt per reversal: record only, never auto-correct.</p>
+    </div>
+    <ol class="recon-list">
+      <li data-lang="zh"><span>机签数 vs INBOX 行数</span></li>
+      <li data-lang="zh"><span>SCORED 卡 vs 查新条目</span></li>
+      <li data-lang="zh"><span>豁免 / 探针比例</span></li>
+      <li data-lang="zh"><span>fence_zone 盖章率</span></li>
+      <li data-lang="zh"><span>遗留 blocked / 待 OCR</span></li>
+      <li data-lang="zh"><span>IMPORT-LOG 比例</span></li>
+      <li data-lang="zh"><span>弃稿比例</span></li>
+      <li data-lang="zh"><span>异常统计（翻案 / 对账不平 / 引文 MISS / 弃稿 / 挂起超龄 / 盖章缺失）</span></li>
+      <li data-lang="en"><span>Machine signatures vs INBOX rows</span></li>
+      <li data-lang="en"><span>SCORED cards vs novelty entries</span></li>
+      <li data-lang="en"><span>Waiver / probe ratio</span></li>
+      <li data-lang="en"><span>fence_zone stamp rate</span></li>
+      <li data-lang="en"><span>Leftover blocked / needs-OCR</span></li>
+      <li data-lang="en"><span>IMPORT-LOG ratio</span></li>
+      <li data-lang="en"><span>Discard ratio</span></li>
+      <li data-lang="en"><span>Anomaly stats (reversals / mismatches / citation MISS / discards / over-age suspensions / missing stamps)</span></li>
+    </ol>
+  </section>
+
+  <!-- 06 Tooling -->
+  <div class="band">
+  <section class="section" id="tooling">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">06</span>
+        <span class="eyebrow-name" data-lang="zh">机械核查</span>
+        <span class="eyebrow-name" data-lang="en">Mechanical Checks</span>
+      </div>
+      <h2 data-lang="zh">模型负责判断，脚本负责挑错</h2>
+      <h2 data-lang="en">The model judges. The scripts catch.</h2>
+      <p class="section-lede" data-lang="zh">两个纯标准库脚本给卡片和裁定兜底：一个查结构与措辞，一个逐字查引文。它们不替模型思考，只让造假和越级无处遁形。</p>
+      <p class="section-lede" data-lang="en">Two stdlib-only scripts backstop the cards and verdicts: one lints structure and language, one verifies quotes verbatim. They do not think for the model — they make fabrication and tier-inflation impossible to hide.</p>
+    </div>
+    <div class="duo-grid">
+      <div class="duo-card">
+        <h3><span aria-hidden="true">🧰</span> idea_lint.py</h3>
+        <p data-lang="zh">对 idea / direction / goal 卡的机械 linter：结构、语言、证据上限（含拒收自写 <code>[e]</code> 锚点）、疑问句伪装、目标卡规则，外加两条新规则——<strong>T1</strong>：「顶会大工程」档的 <code>important_problem</code> 必须锚定真实的 field 层记录；<strong>F1</strong>：引文规则。</p>
+        <p data-lang="zh">auto 运行下机器可对违规行修一次并重新 lint；仍不过则弃稿，lint 输出原样贴进 INBOX 弃稿行。</p>
+        <p data-lang="en">A mechanical linter over idea / direction / goal cards: structural, language, evidence-ceiling (including rejecting self-written <code>[e]</code> anchors), interrogative-disguise, and goal-card rules — plus two new ones: <strong>T1</strong>, a top-venue-tier claim must anchor <code>important_problem</code> to a real field-layer record; <strong>F1</strong>, citations.</p>
+        <p data-lang="en">In auto runs the machine may fix violating lines exactly once and re-lint; still failing means the draft is discarded with the lint output pasted verbatim into the INBOX discard row.</p>
+      </div>
+      <div class="duo-card teal">
+        <h3><span aria-hidden="true">🔎</span> quote_check.py</h3>
+        <p data-lang="zh">对 critique 指控引用的每段引文做逐字核查：必须在 <code>wiki/papers/</code> 下逐字出现，抽样用确定性哈希。凭空捏造的「原文结论」在裁定建立之前就被抓住；<strong>MISS 的指控一律降级为证据不足</strong>。</p>
+        <p data-lang="zh">诚实的 v0 范围：子串匹配抓伪造，不抓张冠李戴；参照文本是编译后的笔记，不是 raw/ 原件。</p>
+        <p data-lang="en">Verbatim verification of every quoted span a critique charge cites: it must occur verbatim under <code>wiki/papers/</code>, with deterministic hash sampling. A critic that hallucinates a source sentence is caught before any verdict is built on it; <strong>a MISS downgrades the charge to insufficient-evidence</strong>.</p>
+        <p data-lang="en">Honestly scoped v0: substring matching catches fabrication, not misattribution; the reference text is the compiled note, not the raw/ original.</p>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- 07 Variants -->
   <section class="section" id="variants">
-    <div data-lang="zh"><p class="section-label">两种变体</p><h2>科研或课程——选你的工作流</h2><p class="desc">两种变体共享同一套"先编译、后查询"的流程，针对不同场景做了定制。</p></div>
-    <div data-lang="en"><p class="section-label">Two Variants</p><h2>Research or Course — pick your workflow</h2><p class="desc">Both variants share the same compile-then-query pipeline, tailored for different use cases.</p></div>
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">07</span>
+        <span class="eyebrow-name" data-lang="zh">两种变体</span>
+        <span class="eyebrow-name" data-lang="en">Two Variants</span>
+      </div>
+      <h2 data-lang="zh">科研或课程——选你的工作流</h2>
+      <h2 data-lang="en">Research or course — pick your workflow</h2>
+      <p class="section-lede" data-lang="zh">两种变体共享同一套「先编译、后查询」的流程，针对不同场景做了定制。</p>
+      <p class="section-lede" data-lang="en">Both variants share the same compile-then-query pipeline, tailored for different use cases.</p>
+    </div>
     <div class="variant-grid">
       <div class="variant-card research">
         <h3>research</h3>
-        <p class="sub" data-lang="zh">文献调研和 novelty gap 分析</p><p class="sub" data-lang="en">Literature survey & novelty gap analysis</p>
+        <p class="sub" data-lang="zh">文献调研和 novelty gap 分析</p><p class="sub" data-lang="en">Literature survey &amp; novelty gap analysis</p>
         <table>
           <tr data-lang="zh"><td>源材料</td><td>论文（arXiv / 网页）</td></tr><tr data-lang="zh"><td>主笔记</td><td><code>wiki/papers/</code></td></tr><tr data-lang="zh"><td>综合层</td><td><code>wiki/concepts/</code></td></tr><tr data-lang="zh"><td>特色</td><td><code>wiki/gaps/</code> 新颖性分析</td></tr><tr data-lang="zh"><td>外部检索</td><td><code>/wiki-search-latest</code>、<code>/wiki-ideate</code></td></tr>
           <tr data-lang="en"><td>Sources</td><td>Papers (arXiv / web)</td></tr><tr data-lang="en"><td>Notes</td><td><code>wiki/papers/</code></td></tr><tr data-lang="en"><td>Synthesis</td><td><code>wiki/concepts/</code></td></tr><tr data-lang="en"><td>Unique</td><td><code>wiki/gaps/</code> novelty analysis</td></tr><tr data-lang="en"><td>Search</td><td><code>/wiki-search-latest</code> + <code>/wiki-ideate</code></td></tr>
@@ -299,7 +632,7 @@ body {
       </div>
       <div class="variant-card course">
         <h3>course</h3>
-        <p class="sub" data-lang="zh">复习备考，讲义压缩成可查知识库</p><p class="sub" data-lang="en">Exam revision & lecture compression</p>
+        <p class="sub" data-lang="zh">复习备考，讲义压缩成可查知识库</p><p class="sub" data-lang="en">Exam revision &amp; lecture compression</p>
         <table>
           <tr data-lang="zh"><td>源材料</td><td>讲义 / 实验 / 作业</td></tr><tr data-lang="zh"><td>主笔记</td><td><code>wiki/lectures/</code> + <code>wiki/practice/</code></td></tr><tr data-lang="zh"><td>综合层</td><td><code>wiki/topics/</code></td></tr><tr data-lang="zh"><td>特色</td><td><code>wiki/exam-scope.md</code> 考试大纲骨架</td></tr><tr data-lang="zh"><td>外部检索</td><td>无</td></tr>
           <tr data-lang="en"><td>Sources</td><td>Slides / labs / assignments</td></tr><tr data-lang="en"><td>Notes</td><td><code>wiki/lectures/</code> + <code>wiki/practice/</code></td></tr><tr data-lang="en"><td>Synthesis</td><td><code>wiki/topics/</code></td></tr><tr data-lang="en"><td>Unique</td><td><code>wiki/exam-scope.md</code> spine</td></tr><tr data-lang="en"><td>Search</td><td>none</td></tr>
@@ -308,9 +641,20 @@ body {
     </div>
   </section>
 
+  <!-- 08 Install -->
+  <div class="band">
   <section class="section" id="install">
-    <div data-lang="zh"><p class="section-label">安装</p><h2>Claude Code 与 Codex 双端可用</h2><p class="desc">两端都能从本仓库 marketplace 安装；bootstrap 项目自带两套入口。</p></div>
-    <div data-lang="en"><p class="section-label">Installation</p><h2>Works in Claude Code and Codex</h2><p class="desc">Both runtimes install from this repository marketplace; bootstrapped projects carry both entry points.</p></div>
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">08</span>
+        <span class="eyebrow-name" data-lang="zh">安装</span>
+        <span class="eyebrow-name" data-lang="en">Install</span>
+      </div>
+      <h2 data-lang="zh">Claude Code 与 Codex 双端可用</h2>
+      <h2 data-lang="en">Works in Claude Code and Codex</h2>
+      <p class="section-lede" data-lang="zh">两端都能从本仓库 marketplace 安装；bootstrap 项目自带两套入口。</p>
+      <p class="section-lede" data-lang="en">Both runtimes install from this repository marketplace; bootstrapped projects carry both entry points.</p>
+    </div>
     <div class="code-block"><div class="code-block-header"><span class="code-block-label">Claude Code</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre><code><span class="prompt">&gt; </span>/plugin marketplace add Spark-To-Paper-Skills/paper-wiki
 <span class="prompt">&gt; </span>/plugin install paper-wiki@paper-wiki</code></pre></div>
     <div class="code-block"><div class="code-block-header"><span class="code-block-label">Codex</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre><code>codex plugin marketplace add Spark-To-Paper-Skills/paper-wiki
@@ -328,106 +672,119 @@ codex plugin add paper-wiki@paper-wiki</code></pre></div>
     <div data-lang="zh"><p class="desc">创建后任选一端：Claude Code 运行 <code>/wiki-init</code>；Codex 运行 <code>$paper-wiki-project wiki-init</code>。</p></div>
     <div data-lang="en"><p class="desc">Choose one runtime: Claude Code runs <code>/wiki-init</code>; Codex runs <code>$paper-wiki-project wiki-init</code>.</p></div>
   </section>
+  </div>
 
+  <!-- 09 Commands -->
   <section class="section" id="commands">
-    <div data-lang="zh"><p class="section-label">命令</p><h2>双端 action 速查</h2><p class="desc">Claude Code 用 <code>/wiki-*</code>；Codex 用 <code>$paper-wiki-project wiki-*</code> 或自然语言点名 action。</p></div>
-    <div data-lang="en"><p class="section-label">Commands</p><h2>Dual-runtime action reference</h2><p class="desc">Claude Code uses <code>/wiki-*</code>; Codex uses <code>$paper-wiki-project wiki-*</code> or a natural-language request naming the action.</p></div>
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">09</span>
+        <span class="eyebrow-name" data-lang="zh">命令</span>
+        <span class="eyebrow-name" data-lang="en">Commands</span>
+      </div>
+      <h2 data-lang="zh">7 个 action，双端速查</h2>
+      <h2 data-lang="en">Seven actions, dual-runtime reference</h2>
+      <p class="section-lede" data-lang="zh">Claude Code 用 <code>/wiki-*</code>；Codex 用 <code>$paper-wiki-project wiki-*</code> 或自然语言点名 action。</p>
+      <p class="section-lede" data-lang="en">Claude Code uses <code>/wiki-*</code>; Codex uses <code>$paper-wiki-project wiki-*</code> or a natural-language request naming the action.</p>
+    </div>
     <table class="cmd-table" data-lang="zh"><thead><tr><th>命令</th><th>功能</th></tr></thead><tbody>
       <tr><td><code>/wiki-init</code></td><td>初始化（仅首次）：填写主题和种子论文 / 解包并清点材料</td></tr>
       <tr><td><code>/wiki-compile</code></td><td>读取 <code>raw/</code> 中的新材料，编译笔记，综合概念或主题</td></tr>
       <tr><td><code>/wiki-search-latest &lt;主题&gt;</code></td><td>搜索最新相关论文 <span class="tag">research</span></td></tr>
       <tr><td><code>/wiki-critique &lt;文件&gt;</code></td><td>对抗性审查：找漏洞、过度声明、公式错误</td></tr>
       <tr><td><code>/wiki-ideate &lt;gap&gt;</code></td><td>发现未试过的组合 <span class="tag">research</span></td></tr>
-      <tr><td><code>/wiki-teach &lt;问题&gt;</code></td><td>paper-wiki 自带查询与教学，不依赖外部 <code>/teach</code></td></tr>
+      <tr><td><code>/wiki-teach &lt;问题&gt;</code></td><td>内置查询与教学；wiki 里没有的内容会明确告知</td></tr>
+      <tr><td><code>/wiki-auto &lt;文件夹&gt;</code></td><td>全自动流水线：论文文件夹进，带评级的 idea 卡出；止于评级 <span class="tag auto">auto</span></td></tr>
     </tbody></table>
-    <div class="tip" data-lang="zh"><strong>查询 wiki</strong> 用内置 <code>wiki-teach</code> action；wiki 里没有的内容会明确告知。</div>
     <table class="cmd-table" data-lang="en"><thead><tr><th>Command</th><th>What it does</th></tr></thead><tbody>
       <tr><td><code>/wiki-init</code></td><td>One-time setup: fill topic + seeds (research) / unpack + inventory (course)</td></tr>
       <tr><td><code>/wiki-compile</code></td><td>Read new <code>raw/</code> material, write notes, synthesize concepts</td></tr>
       <tr><td><code>/wiki-search-latest &lt;topic&gt;</code></td><td>Find recent papers to import <span class="tag">research</span></td></tr>
       <tr><td><code>/wiki-critique &lt;file&gt;</code></td><td>Adversarial review: holes, overclaims, wrong formulas</td></tr>
       <tr><td><code>/wiki-ideate &lt;gap&gt;</code></td><td>Discover untried combinations <span class="tag">research</span></td></tr>
-      <tr><td><code>/wiki-teach &lt;question&gt;</code></td><td>Built-in query and teaching; no external <code>/teach</code> dependency</td></tr>
+      <tr><td><code>/wiki-teach &lt;question&gt;</code></td><td>Built-in query and teaching; absent content is explicitly flagged</td></tr>
+      <tr><td><code>/wiki-auto &lt;folder&gt;</code></td><td>Unattended pipeline: a folder of papers in, rated idea cards out; stops at ratings <span class="tag auto">auto</span></td></tr>
     </tbody></table>
-    <div class="tip" data-lang="en"><strong>To query the wiki,</strong> use the built-in <code>wiki-teach</code> action. Absent content is explicitly flagged.</div>
+    <div class="tip" data-lang="zh"><strong>查询 wiki</strong> 用内置 <code>wiki-teach</code> action。旧的 <code>/wiki-ask</code> 已退役为 <code>wiki-teach</code> 的兼容别名，不计入 7 个 action。</div>
+    <div class="tip" data-lang="en"><strong>To query the wiki,</strong> use the built-in <code>wiki-teach</code> action. The old <code>/wiki-ask</code> is a retired compatibility alias for <code>wiki-teach</code> and is not counted among the seven.</div>
   </section>
 
-  <!-- ══ Walkthroughs ══ -->
+  <!-- 10 Walkthroughs -->
+  <div class="band">
   <section class="section" id="walkthrough">
-    <div data-lang="zh">
-      <p class="section-label">场景走读</p>
-      <h2>三个研究者的完整使用故事</h2>
-      <p class="desc">从创建 wiki 到投稿，每个场景展示具体命令、预期输出和决策点。</p>
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">10</span>
+        <span class="eyebrow-name" data-lang="zh">场景走读</span>
+        <span class="eyebrow-name" data-lang="en">Walkthroughs</span>
+      </div>
+      <h2 data-lang="zh">三个研究者的完整使用故事</h2>
+      <h2 data-lang="en">Three researchers, three complete journeys</h2>
+      <p class="section-lede" data-lang="zh">从创建 wiki 到投稿，每个场景展示具体命令、预期输出和决策点。</p>
+      <p class="section-lede" data-lang="en">From wiki creation to paper submission — concrete commands, expected outputs, and decision points.</p>
     </div>
-    <div data-lang="en">
-      <p class="section-label">Walkthroughs</p>
-      <h2>Three researchers, three complete journeys</h2>
-      <p class="desc">From wiki creation to paper submission — concrete commands, expected outputs, and decision points.</p>
-    </div>
-    <div class="variant-grid" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="variant-grid tri">
       <div class="variant-card research" data-lang="zh">
         <h3>场景 A</h3>
         <p class="sub">PhD 生，新方向，8 周</p>
-        <table>
-          <tr><td>重点</td><td>scope fence 延迟填写、ideate 发现方向、reviewer 反馈后重开 wiki</td></tr>
-        </table>
+        <table><tr><td>重点</td><td>scope fence 延迟填写、ideate 发现方向、reviewer 反馈后重开 wiki</td></tr></table>
       </div>
-      <div class="variant-card research" style="--accent-green:#fbbf24" data-lang="zh">
+      <div class="variant-card research" data-lang="zh">
         <h3>场景 B</h3>
         <p class="sub">资深研究者，4 周快速验证</p>
-        <table>
-          <tr><td>重点</td><td>Day 1 即 ideate、精准补充、teach 出对比表写 related work</td></tr>
-        </table>
+        <table><tr><td>重点</td><td>Day 1 即 ideate、精准补充、teach 出对比表写 related work</td></tr></table>
       </div>
       <div class="variant-card course" data-lang="zh">
         <h3>场景 C</h3>
         <p class="sub">长期维护者，6 周跨论文复用</p>
-        <table>
-          <tr><td>重点</td><td>重开冻结 wiki、更新 scope fence、<code>--Update</code> 更新命令</td></tr>
-        </table>
+        <table><tr><td>重点</td><td>重开冻结 wiki、更新 scope fence、<code>--Update</code> 更新命令</td></tr></table>
       </div>
       <div class="variant-card research" data-lang="en">
         <h3>Scenario A</h3>
         <p class="sub">PhD student, new direction, 8 weeks</p>
-        <table>
-          <tr><td>Focus</td><td>Deferred scope fence, ideate discovers direction, reviewer feedback reopens wiki</td></tr>
-        </table>
+        <table><tr><td>Focus</td><td>Deferred scope fence, ideate discovers direction, reviewer feedback reopens wiki</td></tr></table>
       </div>
-      <div class="variant-card research" style="--accent-green:#fbbf24" data-lang="en">
+      <div class="variant-card research" data-lang="en">
         <h3>Scenario B</h3>
         <p class="sub">Senior researcher, 4-week fast validation</p>
-        <table>
-          <tr><td>Focus</td><td>Day-1 ideate, precise expansion, teach generates comparison tables for writing</td></tr>
-        </table>
+        <table><tr><td>Focus</td><td>Day-1 ideate, precise expansion, teach generates comparison tables for writing</td></tr></table>
       </div>
       <div class="variant-card course" data-lang="en">
         <h3>Scenario C</h3>
         <p class="sub">Long-term maintainer, 6-week cross-paper reuse</p>
-        <table>
-          <tr><td>Focus</td><td>Reopen frozen wiki, update scope fence, <code>--Update</code> for stale commands</td></tr>
-        </table>
+        <table><tr><td>Focus</td><td>Reopen frozen wiki, update scope fence, <code>--Update</code> for stale commands</td></tr></table>
       </div>
     </div>
     <p style="text-align:center;margin-top:24px;">
-      <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/WALKTHROUGH.md" style="color:var(--accent);text-decoration:none;font-weight:600;font-size:15px;" data-lang="zh">📖 查看完整走读 →</a>
-      <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/WALKTHROUGH.md" style="color:var(--accent);text-decoration:none;font-weight:600;font-size:15px;" data-lang="en">📖 Read full walkthroughs →</a>
+      <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/WALKTHROUGH.md" style="color:var(--blue-deep);text-decoration:none;font-weight:600;font-size:15px;" data-lang="zh">📖 查看完整走读 →</a>
+      <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/WALKTHROUGH.md" style="color:var(--blue-deep);text-decoration:none;font-weight:600;font-size:15px;" data-lang="en">📖 Read full walkthroughs →</a>
     </p>
   </section>
+  </div>
 
-  <section class="section">
-    <div data-lang="zh"><p class="section-label">项目结构</p><h2>仓库里有什么</h2></div>
-    <div data-lang="en"><p class="section-label">Project Layout</p><h2>What's inside</h2></div>
+  <!-- 11 Layout -->
+  <section class="section" id="layout">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">11</span>
+        <span class="eyebrow-name" data-lang="zh">项目结构</span>
+        <span class="eyebrow-name" data-lang="en">Project Layout</span>
+      </div>
+      <h2 data-lang="zh">仓库里有什么</h2>
+      <h2 data-lang="en">What's inside</h2>
+    </div>
     <div class="file-tree" data-lang="zh">
       <code class="dir">.claude-plugin/</code><span class="desc">— Claude Code plugin 元数据</span><br>
       <code class="dir">.codex-plugin/</code><span class="desc">— Codex plugin manifest</span><br>
       <code class="dir">.agents/plugins/</code><span class="desc">— Codex marketplace 元数据</span><br>
       <code class="dir">skills/paper-wiki/</code><span class="desc">— 双端共用 skill 与 action 合约</span><br>
-      <code class="dir">scripts/</code><span class="desc">— bootstrap 脚本 + OCR + PPTX 提取</span><br>
-      <code class="dir">commands/</code><span class="desc">— Claude slash adapter 与共享流程正文</span><br>
-      <code class="dir">agents/</code><span class="desc">— sub-agent（wiki-critic / wiki-searcher / wiki-ideator）</span><br>
+      <code class="dir">commands/</code><span class="desc">— 各 action 正文（含 wiki-auto 自动流水线）</span><br>
+      <code class="dir">agents/</code><span class="desc">— sub-agent（searcher / critic / ideator / cartographer）</span><br>
+      <code class="dir">scripts/</code><span class="desc">— bootstrap + OCR + PPTX 提取 + idea_lint / quote_check</span><br>
+      <code class="dir">hooks/</code><span class="desc">— SessionStart 更新检查</span><br>
       <code class="dir">templates/</code><span class="desc">— 各变体的模板文件</span><br>
       <code class="dir">templates/memory/</code><span class="desc">— 不含 secret 的本地说明模板</span><br>
-      <code class="dir">docs/</code><span class="desc">— 命令教程、OCR 配置指南、方法论、踩坑记录</span><br>
+      <code class="dir">docs/</code><span class="desc">— 命令教程、场景走读、OCR 配置指南、方法论、踩坑记录</span><br>
       <code class="dir">examples/</code><span class="desc">— 无 GPU 快速上手 + 示例 wiki</span><br>
       <code>docs/llm-wiki.protocol.yaml</code><span class="desc">— 机器可读的行为规约</span>
     </div>
@@ -436,36 +793,40 @@ codex plugin add paper-wiki@paper-wiki</code></pre></div>
       <code class="dir">.codex-plugin/</code><span class="desc">— Codex plugin manifest</span><br>
       <code class="dir">.agents/plugins/</code><span class="desc">— Codex marketplace metadata</span><br>
       <code class="dir">skills/paper-wiki/</code><span class="desc">— shared skill and action contracts</span><br>
-      <code class="dir">scripts/</code><span class="desc">— bootstrap (.ps1 + .sh) + OCR + PPTX</span><br>
-      <code class="dir">commands/</code><span class="desc">— Claude slash adapters over shared workflows</span><br>
-      <code class="dir">agents/</code><span class="desc">— sub-agents (wiki-critic / wiki-searcher / wiki-ideator)</span><br>
+      <code class="dir">commands/</code><span class="desc">— action bodies (incl. the wiki-auto pipeline)</span><br>
+      <code class="dir">agents/</code><span class="desc">— sub-agents (searcher / critic / ideator / cartographer)</span><br>
+      <code class="dir">scripts/</code><span class="desc">— bootstrap + OCR + PPTX + idea_lint / quote_check</span><br>
+      <code class="dir">hooks/</code><span class="desc">— SessionStart update check</span><br>
       <code class="dir">templates/</code><span class="desc">— {research, course} template files</span><br>
       <code class="dir">templates/memory/</code><span class="desc">— non-secret local note templates</span><br>
-      <code class="dir">docs/</code><span class="desc">— tutorial, OCR setup, methodology, gotchas</span><br>
+      <code class="dir">docs/</code><span class="desc">— tutorial, walkthroughs, OCR setup, methodology, gotchas</span><br>
       <code class="dir">examples/</code><span class="desc">— no-GPU quickstart + sample wiki</span><br>
       <code>docs/llm-wiki.protocol.yaml</code><span class="desc">— machine-readable behavior contract</span>
     </div>
   </section>
-</div>
+
+</main>
 
 <footer class="footer">
   <div data-lang="zh">
-    <strong style="color:var(--text-primary)">paper-wiki</strong>
+    <strong style="color:var(--ink2)">paper-wiki</strong>
     <span class="footer-sep"></span>MIT 许可证
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki">GitHub</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.md">README</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/TUTORIAL.md">命令教程</a>
-    <br>📖 <a href="https://github.com/mattpocock/skills/tree/main/skills/productivity/teach">mattpocock/skills — teach</a>：启发了 wiki + teach 集成
-    <br>感谢参与内部测试和早期使用的朋友们
+    <div class="org-line">✨ <a href="https://github.com/Spark-To-Paper-Skills">Spark-To-Paper-Skills</a> 组织出品<span class="footer-sep"></span>姊妹项目：<a href="https://spark-to-paper-skills.github.io/spark-to-paper-skills/">spark-to-paper-skills</a>（一个 spark 进，一篇论文出）</div>
+    <div class="org-line">📖 <a href="https://github.com/mattpocock/skills/tree/main/skills/productivity/teach">mattpocock/skills — teach</a>：启发了 wiki + teach 集成<span class="footer-sep"></span>感谢参与内部测试和早期使用的朋友们</div>
+    <div class="org-line"><i>论文进。图谱出。idea 带着评级来见你。</i></div>
   </div>
   <div data-lang="en">
-    <strong style="color:var(--text-primary)">paper-wiki</strong>
+    <strong style="color:var(--ink2)">paper-wiki</strong>
     <span class="footer-sep"></span>MIT License
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki">GitHub</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.en.md">README</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/TUTORIAL.md">Tutorial</a>
-    <br>📖 <a href="https://github.com/mattpocock/skills/tree/main/skills/productivity/teach">mattpocock/skills — teach</a>: inspired the wiki + teach integration
-    <br>Thanks to the early adopters and internal testers
+    <div class="org-line">✨ From the <a href="https://github.com/Spark-To-Paper-Skills">Spark-To-Paper-Skills</a> org<span class="footer-sep"></span>sister project: <a href="https://spark-to-paper-skills.github.io/spark-to-paper-skills/">spark-to-paper-skills</a> (one spark in, one paper out)</div>
+    <div class="org-line">📖 <a href="https://github.com/mattpocock/skills/tree/main/skills/productivity/teach">mattpocock/skills — teach</a>: inspired the wiki + teach integration<span class="footer-sep"></span>Thanks to the early adopters and internal testers</div>
+    <div class="org-line"><i>Papers in. Graph out. Ideas come back rated.</i></div>
   </div>
 </footer>
 
@@ -495,6 +856,41 @@ function copyCode(btn) {
     setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
   });
 }
+
+/* Theme: three-way cycle system → light → dark, persisted; respects prefers-color-scheme in system mode. */
+var THEME_KEY = 'pw-theme';
+function resolveTheme(choice) {
+  if (choice === 'light' || choice === 'dark') return choice;
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+function applyThemeChoice(choice) {
+  if (choice === 'system') { localStorage.removeItem(THEME_KEY); }
+  else { localStorage.setItem(THEME_KEY, choice); }
+  var d = document.documentElement;
+  d.setAttribute('data-theme-choice', choice);
+  d.setAttribute('data-theme', resolveTheme(choice));
+}
+function cycleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme-choice') || 'system';
+  var next = cur === 'system' ? 'light' : (cur === 'light' ? 'dark' : 'system');
+  applyThemeChoice(next);
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    if ((document.documentElement.getAttribute('data-theme-choice') || 'system') === 'system') {
+      document.documentElement.setAttribute('data-theme', resolveTheme('system'));
+    }
+  });
+}
+
+/* Topbar shadow on scroll */
+(function() {
+  var bar = document.getElementById('topbar');
+  function onScroll() { bar.classList.toggle('scrolled', window.scrollY > 8); }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
 setLang(location.hash === '#en' ? 'en' : 'zh');
 </script>
 </body>
