@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>流程架构 · paper-wiki</title>
+<meta name="description" content="paper-wiki 全流程架构图：外层知识回路 × 内层想法回路，按执行者色分——paper-wiki 自身环节、Spark-to-Paper v2 执行、PaperJury 评审、人拍板。">
+<meta property="og:title" content="流程架构 · paper-wiki">
+<meta property="og:description" content="One diagram: the outer knowledge loop and the inner idea loop, colour-coded by executor.">
+<meta property="og:url" content="https://spark-to-paper-skills.github.io/paper-wiki/workflow.html">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23D97757' d='M12 1.6c.7 4.5 2 7.3 3.6 8.9 1.6 1.6 4.4 2.9 8.9 3.6-4.5.7-7.3 2-8.9 3.6-1.6 1.6-2.9 4.4-3.6 8.9-.7-4.5-2-7.3-3.6-8.9C6.8 16.5 4 15.2-.5 14.5c4.5-.7 7.3-2 8.9-3.6 1.6-1.6 2.9-4.4 3.6-8.9Z'/%3E%3Ccircle cx='19.6' cy='4.6' r='1.7' fill='%233A8E8C'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+// Resolve the stored theme choice (system | light | dark) before paint.
+(function () {
+  var s = localStorage.getItem("pw-theme");
+  var c = (s === "light" || s === "dark") ? s : "system";
+  var t = c === "system"
+    ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : c;
+  var d = document.documentElement;
+  d.setAttribute("data-theme", t);
+  d.setAttribute("data-theme-choice", c);
+})();
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue: #d97757;
+  --blue-deep: #b85c3c;
+  --blue-sky: #e28e69;
+  --blue-pale: #efc0ab;
+  --cyan: #3a8e8c;
+  --green: #16a34a;
+  --red: #e11d48;
+  --role-a: #2f7d7b;
+  --grad-1: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 55%, var(--blue-sky) 100%);
+  --grad-2: linear-gradient(135deg, var(--blue), var(--cyan));
+  --grad-3: linear-gradient(135deg, var(--cyan), var(--blue));
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Noto Sans SC", "PingFang SC", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+  --content-w: 1160px;
+  --prose-w: 78ch;
+  --pad-x: clamp(20px, 3.4vw, 44px);
+
+  /* ── Diagram palette: four executor families on the site colour system ──
+     paper-wiki main flow = brand terracotta family (search/compile/carto/ideate/court)
+     执行 Spark-to-Paper v2 = warm amber · 评审 PaperJury = violet · 人 = teal
+     档案 = neutral grey · 灵感支路 = rose (site --red family) */
+  --wf-search:  #e9a583;
+  --wf-compile: #b85c3c;
+  --wf-carto:   #dd9068;
+  --wf-ideate:  #d97757;
+  --wf-court:   #c9605a;
+  --wf-exec:    #c9942e;
+  --wf-jury:    #8b6fd4;
+  --wf-human:   #3a8e8c;
+  --wf-arch:    #94a3b8;
+  --wf-muse:    #cf7fa4;
+}
+
+:root, :root[data-theme=light] {
+  --paper: #f8f9fc;
+  --paper2: #ffffff;
+  --card: #ffffff;
+  --ink: #1e293b;
+  --ink2: #0f172a;
+  --body: #334155;
+  --lede: #475569;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --line2: #cbd5e1;
+  --band: #eef2f8;
+  --nav-bg: rgba(255,255,255,.7);
+  --nav-bg-scrolled: rgba(255,255,255,.92);
+  --nav-border: rgba(226,232,240,.7);
+  --chip-surface: rgba(15,23,42,.04);
+  --bib-bg: #f1f5f9;
+  --blue-on-tint: #a04a28;
+  --code-prompt: #b0512a;
+  --tint-orange: rgba(217,119,87,.09);
+  --tint-teal: rgba(58,142,140,.12);
+  --tint-red: rgba(225,29,72,.08);
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 1px 1px rgba(15,23,42,.04);
+  --shadow-md: 0 8px 24px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.05);
+
+  /* diagram text colours — all ≥ 4.5:1 on --card in this theme */
+  --wf-search-tx:  #a0552e;
+  --wf-compile-tx: #8f4526;
+  --wf-carto-tx:   #a1552c;
+  --wf-ideate-tx:  #a04a28;
+  --wf-court-tx:   #a83f38;
+  --wf-exec-tx:    #8a6212;
+  --wf-jury-tx:    #5b46a8;
+  --wf-human-tx:   #296b69;
+  --wf-arch-tx:    #5b6675;
+  --wf-muse-tx:    #b03a5e;
+  --wf-t2: #3f4c5e; --wf-t3: #4d596b;
+  --wf-wire:   #93a2b6;
+  --wf-o1: .17; --wf-o2: .05;
+  --wf-stroke-a: .34;
+  --wf-shadow: #0f172a; --wf-shadow-a: .10;
+}
+
+:root[data-theme=dark] {
+  --paper: #0a0b0f;
+  --paper2: #12141b;
+  --card: #14161d;
+  --ink: #e6e9f0;
+  --ink2: #f4f6fb;
+  --body: #c2c9d6;
+  --lede: #aeb6c6;
+  --muted: #8b93a6;
+  --line: #262a35;
+  --line2: #3a4050;
+  --band: #101219;
+  --nav-bg: rgba(18,20,27,.65);
+  --nav-bg-scrolled: rgba(18,20,27,.9);
+  --nav-border: rgba(58,64,80,.7);
+  --chip-surface: rgba(255,255,255,.06);
+  --bib-bg: #0d0f15;
+  --blue-deep: #e89a77;
+  --blue-on-tint: #e89a77;
+  --code-prompt: #e8a184;
+  --role-a: #5cb8b5;
+  --green: #4ade80;
+  --red: #fb7185;
+  --tint-orange: rgba(226,142,105,.12);
+  --tint-teal: rgba(92,184,181,.14);
+  --tint-red: rgba(251,113,133,.1);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4), 0 1px 1px rgba(0,0,0,.3);
+  --shadow-md: 0 8px 24px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35);
+
+  /* diagram text colours — all ≥ 4.5:1 on --card in this theme */
+  --wf-search-tx:  #f0b394;
+  --wf-compile-tx: #e08a63;
+  --wf-carto-tx:   #eda780;
+  --wf-ideate-tx:  #e89a77;
+  --wf-court-tx:   #ec8b84;
+  --wf-exec-tx:    #e5b96e;
+  --wf-jury-tx:    #c3b0f0;
+  --wf-human-tx:   #5cb8b5;
+  --wf-arch-tx:    #a0aab8;
+  --wf-muse-tx:    #eda3c4;
+  --wf-t2: #b7bfcd; --wf-t3: #a3abbb;
+  --wf-wire:   #77839a;
+  --wf-o1: .15; --wf-o2: .04;
+  --wf-stroke-a: .40;
+  --wf-shadow: #000000; --wf-shadow-a: .5;
+}
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--paper); color: var(--ink);
+  line-height: 1.65; font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  /* clip (not hidden): `overflow-x: hidden` on body turns it into a scroll
+     container and kills `position: sticky` on the topbar. */
+  overflow-x: clip;
+  transition: background-color .25s ease, color .25s ease;
+}
+:root[data-theme=dark] a { color: #e8a184; }
+a { color: var(--blue-deep); }
+
+[data-lang="en"] { display: none; }
+
+/* ── Topbar ─────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--nav-bg); border-bottom: 1px solid var(--nav-border);
+  backdrop-filter: saturate(160%) blur(16px); -webkit-backdrop-filter: saturate(160%) blur(16px);
+  transition: box-shadow .25s ease, background .25s ease;
+}
+.topbar.scrolled { background: var(--nav-bg-scrolled); box-shadow: var(--shadow-sm); }
+.topbar-inner { max-width: var(--content-w); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px var(--pad-x); }
+.brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+.brand svg { flex-shrink: 0; }
+.brand-name { font-size: 1.12rem; font-weight: 800; letter-spacing: -.015em; white-space: nowrap; background: var(--grad-1); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+.nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: var(--r-sm); transition: color .2s, background .2s; }
+.nav-links a:hover { color: var(--ink2); background: var(--chip-surface); }
+.nav-links a[aria-current=page] { color: var(--ink2); background: var(--chip-surface); font-weight: 600; }
+.nav-links a.gh { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line2); border-radius: var(--r-pill); padding: 6px 14px; color: var(--body); }
+.nav-links a.gh:hover { border-color: var(--blue); color: var(--ink2); }
+.lang-switch { display: inline-flex; border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--line2); margin-left: 4px; }
+.lang-switch button { border: none; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; padding: 5px 12px; cursor: pointer; transition: all .2s; font-family: inherit; }
+.lang-switch button.active { background: var(--blue); color: #fff; }
+.lang-switch button:hover:not(.active) { color: var(--ink2); }
+.theme-toggle { border: 1px solid var(--line2); background: transparent; color: var(--muted); border-radius: var(--r-sm); padding: 6px 8px; cursor: pointer; display: inline-flex; align-items: center; margin-left: 4px; transition: all .2s; }
+.theme-toggle:hover { color: var(--ink2); border-color: var(--blue); }
+.theme-toggle svg { display: none; }
+:root[data-theme-choice=system] .theme-toggle .icon-sys { display: block; }
+:root[data-theme-choice=light] .theme-toggle .icon-sun { display: block; }
+:root[data-theme-choice=dark] .theme-toggle .icon-moon { display: block; }
+.nav-toggle { display: none; background: none; border: none; color: var(--ink); cursor: pointer; padding: 8px; }
+
+/* ── Page head ──────────────────────────── */
+.page-head { padding: clamp(38px, 6vh, 62px) var(--pad-x) clamp(20px, 3vh, 30px); text-align: center; position: relative; overflow: hidden; }
+.page-head::before { content: ''; position: absolute; inset: 0; background:
+  radial-gradient(ellipse 80% 60% at 50% 6%, var(--tint-orange) 0%, transparent 60%),
+  radial-gradient(ellipse 55% 46% at 82% 74%, var(--tint-teal) 0%, transparent 62%);
+  pointer-events: none; }
+.page-head-inner { position: relative; max-width: 860px; margin: 0 auto; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--tint-orange); border: 1px solid var(--blue-pale); border-radius: var(--r-pill); padding: 6px 18px; font-size: 13px; font-weight: 600; color: var(--blue-on-tint); margin-bottom: 22px; font-family: var(--font-mono); }
+:root[data-theme=dark] .hero-badge { border-color: rgba(226,142,105,.35); }
+.page-head h1 { font-size: clamp(1.9rem, 4.2vw, 2.9rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.16; margin-bottom: 18px; color: var(--ink2); }
+.page-head h1 .gradient { background: var(--grad-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.page-head .tagline { font-size: clamp(.98rem, 1.9vw, 1.1rem); color: var(--lede); max-width: 700px; margin: 0 auto; line-height: 1.85; }
+.page-head .tagline code { font-family: var(--font-mono); font-size: .9em; background: var(--tint-orange); color: var(--blue-on-tint); padding: 1px 6px; border-radius: 5px; }
+
+/* ── Sections ───────────────────────────── */
+.band { background: var(--band); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.section { max-width: var(--content-w); margin: 0 auto; padding: clamp(44px, 6.5vh, 68px) var(--pad-x) clamp(36px, 5vh, 54px); }
+.section-header { display: grid; grid-template-columns: 86px 1fr; column-gap: 24px; align-items: start; padding-top: 16px; margin-bottom: 30px; border-top: 2px solid var(--ink2); }
+.section-eyebrow { display: flex; flex-direction: column; gap: 6px; }
+.eyebrow-num { font-family: var(--font-mono); font-size: clamp(2rem, 3.4vw, 2.6rem); font-weight: 700; line-height: .9; letter-spacing: -.04em; color: var(--blue); }
+.eyebrow-name { font-size: .78rem; font-weight: 700; line-height: 1.25; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+.section-header h2 { grid-column: 2; font-size: clamp(1.5rem, 2.8vw, 2rem); font-weight: 800; letter-spacing: -.025em; line-height: 1.25; color: var(--ink2); margin-bottom: 10px; }
+.section-lede { grid-column: 2; font-size: 1.02rem; line-height: 1.72; color: var(--lede); max-width: var(--prose-w); margin: 0; }
+.section-lede + .section-lede { margin-top: 8px; }
+.section-lede code { font-family: var(--font-mono); font-size: .88em; background: var(--tint-orange); color: var(--blue-on-tint); padding: 1px 6px; border-radius: 5px; }
+
+/* ── Legend pills ───────────────────────── */
+.wf-legend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 20px; }
+.wf-legend-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; margin-right: 4px; }
+.wf-pill { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line2); background: var(--card); border-radius: var(--r-pill); padding: 5px 14px 5px 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap; box-shadow: var(--shadow-sm); }
+.wf-pill i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.wf-pill em { font-style: normal; font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; color: var(--muted); letter-spacing: .01em; }
+.wf-pill.p-search  { border-color: color-mix(in srgb, var(--wf-search-tx) 40%, var(--line2)); color: var(--wf-search-tx); }
+.wf-pill.p-compile { border-color: color-mix(in srgb, var(--wf-compile-tx) 40%, var(--line2)); color: var(--wf-compile-tx); }
+.wf-pill.p-carto   { border-color: color-mix(in srgb, var(--wf-carto-tx) 40%, var(--line2)); color: var(--wf-carto-tx); }
+.wf-pill.p-ideate  { border-color: color-mix(in srgb, var(--wf-ideate-tx) 40%, var(--line2)); color: var(--wf-ideate-tx); }
+.wf-pill.p-court   { border-color: color-mix(in srgb, var(--wf-court-tx) 40%, var(--line2)); color: var(--wf-court-tx); }
+.wf-pill.p-exec    { border-color: color-mix(in srgb, var(--wf-exec-tx) 40%, var(--line2)); color: var(--wf-exec-tx); }
+.wf-pill.p-jury    { border-color: color-mix(in srgb, var(--wf-jury-tx) 40%, var(--line2)); color: var(--wf-jury-tx); }
+.wf-pill.p-human   { border-color: color-mix(in srgb, var(--wf-human-tx) 40%, var(--line2)); color: var(--wf-human-tx); }
+.wf-pill.p-arch    { border-color: color-mix(in srgb, var(--wf-arch-tx) 40%, var(--line2)); color: var(--wf-arch-tx); }
+.wf-pill.p-search i  { background: var(--wf-search-tx); }
+.wf-pill.p-compile i { background: var(--wf-compile-tx); }
+.wf-pill.p-carto i   { background: var(--wf-carto-tx); }
+.wf-pill.p-ideate i  { background: var(--wf-ideate-tx); }
+.wf-pill.p-court i   { background: var(--wf-court-tx); }
+.wf-pill.p-exec i    { background: var(--wf-exec-tx); }
+.wf-pill.p-jury i    { background: var(--wf-jury-tx); }
+.wf-pill.p-human i   { background: var(--wf-human-tx); }
+.wf-pill.p-arch i    { background: var(--wf-arch-tx); }
+
+/* ── Diagram frame (wide content scrolls inside itself) ── */
+.wf-panel {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background-color: var(--card);
+  background-image: radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 1.6px);
+  background-size: 26px 26px;
+  padding: 26px 22px 20px;
+  box-shadow: var(--shadow-md);
+}
+.wf-panel svg { display: block; width: 100%; min-width: 860px; height: auto; font-family: var(--font-sans); }
+.wf-hint { display: none; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 10px; }
+@media (max-width: 940px) { .wf-hint { display: block; } }
+
+/* ── SVG presentation (all colours via theme variables) ── */
+.wf-panel linearGradient stop:first-child { stop-opacity: var(--wf-o1); }
+.wf-panel linearGradient stop:last-child  { stop-opacity: var(--wf-o2); }
+#g-search  stop { stop-color: var(--wf-search); }
+#g-compile stop { stop-color: var(--wf-compile); }
+#g-carto   stop { stop-color: var(--wf-carto); }
+#g-ideate  stop { stop-color: var(--wf-ideate); }
+#g-court   stop { stop-color: var(--wf-court); }
+#g-exec    stop { stop-color: var(--wf-exec); }
+#g-jury    stop { stop-color: var(--wf-jury); }
+#g-human   stop { stop-color: var(--wf-human); }
+#g-arch    stop { stop-color: var(--wf-arch); }
+#g-neutral stop { stop-color: var(--ink2); }
+#g-pink    stop { stop-color: var(--wf-muse); }
+#g-final   stop { stop-color: var(--ink2); }
+#fShadow feDropShadow { flood-color: var(--wf-shadow); flood-opacity: var(--wf-shadow-a); }
+#ar  path { fill: var(--wf-wire); }
+#arC path { fill: var(--wf-search-tx); }
+#arG path { fill: var(--wf-ideate-tx); }
+#arP path { fill: var(--wf-muse-tx); }
+
+.cd { stroke-width: 1; stroke-opacity: var(--wf-stroke-a); }
+.e-search  { fill: url(#g-search);  stroke: var(--wf-search-tx); }
+.e-compile { fill: url(#g-compile); stroke: var(--wf-compile-tx); }
+.e-carto   { fill: url(#g-carto);   stroke: var(--wf-carto-tx); }
+.e-ideate  { fill: url(#g-ideate);  stroke: var(--wf-ideate-tx); }
+.e-court   { fill: url(#g-court);   stroke: var(--wf-court-tx); }
+.e-exec    { fill: url(#g-exec);    stroke: var(--wf-exec-tx); }
+.e-jury    { fill: url(#g-jury);    stroke: var(--wf-jury-tx); }
+.e-human   { fill: url(#g-human);   stroke: var(--wf-human-tx); }
+.e-arch    { fill: url(#g-arch);    stroke: var(--wf-arch-tx); }
+.e-neutral { fill: url(#g-neutral); stroke: var(--line2); stroke-opacity: 1; }
+.e-pink    { fill: url(#g-pink);    stroke: var(--wf-muse-tx); }
+.e-final   { fill: url(#g-final);   stroke: var(--ink2); stroke-opacity: .35; }
+.gate-ideate { fill: var(--wf-ideate); fill-opacity: .14; stroke: var(--wf-ideate-tx); stroke-opacity: .65; stroke-width: 1.5; }
+.gate-jury   { fill: var(--wf-jury);   fill-opacity: .14; stroke: var(--wf-jury-tx);   stroke-opacity: .65; stroke-width: 1.5; }
+.ring { fill: none; stroke-width: 1; }
+.rg-ideate { stroke: var(--wf-ideate-tx); stroke-opacity: .28; }
+.rg-jury   { stroke: var(--wf-jury-tx);   stroke-opacity: .30; }
+.cap { font-family: var(--font-mono); }
+
+.wire       { stroke: var(--wf-wire); stroke-opacity: .85; }
+.wire-search { stroke: var(--wf-search-tx); }
+.wire-ideate { stroke: var(--wf-ideate-tx); }
+.wire-muse   { stroke: var(--wf-muse-tx); }
+.wire-human  { stroke: var(--wf-human-tx); }
+.rule { stroke: var(--line2); stroke-opacity: .8; }
+
+.bar-search  { fill: var(--wf-search-tx); }
+.bar-compile { fill: var(--wf-compile-tx); }
+.bar-carto   { fill: var(--wf-carto-tx); }
+.bar-ideate  { fill: var(--wf-ideate-tx); }
+.bar-court   { fill: var(--wf-court-tx); }
+.bar-exec    { fill: var(--wf-exec-tx); }
+.bar-jury    { fill: var(--wf-jury-tx); }
+.bar-human   { fill: var(--wf-human-tx); }
+.bar-arch    { fill: var(--wf-arch-tx); }
+.bar-muse    { fill: var(--wf-muse-tx); }
+.bar-final   { fill: var(--ink2); }
+
+.t1 { fill: var(--ink2); }
+.t2 { fill: var(--wf-t2); }
+.t3 { fill: var(--wf-t3); }
+.tx-search  { fill: var(--wf-search-tx); }
+.tx-compile { fill: var(--wf-compile-tx); }
+.tx-carto   { fill: var(--wf-carto-tx); }
+.tx-ideate  { fill: var(--wf-ideate-tx); }
+.tx-court   { fill: var(--wf-court-tx); }
+.tx-exec    { fill: var(--wf-exec-tx); }
+.tx-jury    { fill: var(--wf-jury-tx); }
+.tx-human   { fill: var(--wf-human-tx); }
+.tx-arch    { fill: var(--wf-arch-tx); }
+.tx-muse    { fill: var(--wf-muse-tx); }
+
+.badge rect { fill: var(--card); stroke-width: 1; stroke-opacity: .7; }
+.badge text { font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; text-anchor: middle; letter-spacing: 1px; }
+.b-search rect  { stroke: var(--wf-search-tx); }  .b-search text  { fill: var(--wf-search-tx); }
+.b-compile rect { stroke: var(--wf-compile-tx); } .b-compile text { fill: var(--wf-compile-tx); }
+.b-carto rect   { stroke: var(--wf-carto-tx); }   .b-carto text   { fill: var(--wf-carto-tx); }
+.b-ideate rect  { stroke: var(--wf-ideate-tx); }  .b-ideate text  { fill: var(--wf-ideate-tx); }
+.b-court rect   { stroke: var(--wf-court-tx); }   .b-court text   { fill: var(--wf-court-tx); }
+.b-exec rect    { stroke: var(--wf-exec-tx); }    .b-exec text    { fill: var(--wf-exec-tx); }
+.b-jury rect    { stroke: var(--wf-jury-tx); }    .b-jury text    { fill: var(--wf-jury-tx); }
+.b-human rect   { stroke: var(--wf-human-tx); }   .b-human text   { fill: var(--wf-human-tx); }
+.b-arch rect    { stroke: var(--wf-arch-tx); }    .b-arch text    { fill: var(--wf-arch-tx); }
+
+/* ── Cards, tips, footer ────────────────── */
+.duo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 8px; }
+.duo-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 26px 28px; box-shadow: var(--shadow-sm); transition: box-shadow .2s, border-color .2s; position: relative; overflow: hidden; }
+.duo-card:hover { box-shadow: var(--shadow-md); border-color: var(--line2); }
+.duo-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--grad-2); }
+.duo-card.teal::before { background: var(--grad-3); }
+.duo-card h3 { font-size: 16.5px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; color: var(--ink2); }
+.duo-card p { font-size: 14.5px; color: var(--body); line-height: 1.72; }
+.duo-card p + p { margin-top: 10px; }
+.duo-card code, .tip code { font-family: var(--font-mono); font-size: .88em; background: var(--tint-orange); color: var(--blue-on-tint); padding: 1px 6px; border-radius: 5px; }
+.tip { background: var(--tint-orange); border-left: 3px solid var(--blue); border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 15px 20px; margin: 20px 0; font-size: 14px; color: var(--body); line-height: 1.7; }
+.tip strong { color: var(--ink2); }
+.tip.teal { background: var(--tint-teal); border-left-color: var(--cyan); }
+.back-links { display: flex; justify-content: center; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
+.back-links a { display: inline-flex; align-items: center; gap: 8px; color: var(--body); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 18px; border-radius: var(--r-pill); border: 1px solid var(--line2); background: var(--card); transition: all .2s; box-shadow: var(--shadow-sm); }
+.back-links a:hover { color: var(--ink2); border-color: var(--blue); }
+
+.footer { border-top: 1px solid var(--line); background: var(--band); padding: 48px var(--pad-x); text-align: center; color: var(--muted); font-size: 14px; line-height: 2.1; }
+.footer a { color: var(--blue-deep); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+.footer-sep { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--line2); margin: 0 12px; vertical-align: middle; }
+.footer .org-line { margin-top: 6px; font-size: 13.5px; }
+
+@media (max-width: 768px) {
+  .duo-grid { grid-template-columns: 1fr; }
+  .section-header { grid-template-columns: 1fr; row-gap: 8px; }
+  .section-eyebrow { flex-direction: row; align-items: baseline; gap: 12px; }
+  .eyebrow-num { font-size: 1.6rem; }
+  .section-header h2, .section-lede { grid-column: 1; }
+  .wf-panel { padding: 16px 12px 12px; }
+  .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--nav-bg-scrolled); backdrop-filter: blur(16px); flex-direction: column; align-items: stretch; padding: 16px; border-bottom: 1px solid var(--line); }
+  .nav-links.open { display: flex; }
+  .nav-toggle { display: block; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="./index.html">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="#D97757" d="M12 1.6c.7 4.5 2 7.3 3.6 8.9 1.6 1.6 4.4 2.9 8.9 3.6-4.5.7-7.3 2-8.9 3.6-1.6 1.6-2.9 4.4-3.6 8.9-.7-4.5-2-7.3-3.6-8.9C6.8 16.5 4 15.2-.5 14.5c4.5-.7 7.3-2 8.9-3.6 1.6-1.6 2.9-4.4 3.6-8.9Z"/><circle cx="19.6" cy="4.6" r="1.7" fill="#3A8E8C"/></svg>
+      <span class="brand-name">paper-wiki</span>
+    </a>
+    <button class="nav-toggle" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav class="nav-links">
+      <a href="./index.html#concept" data-lang="zh">核心理念</a>
+      <a href="./index.html#concept" data-lang="en">Concept</a>
+      <a href="./index.html#auto" data-lang="zh">自动流水线</a>
+      <a href="./index.html#auto" data-lang="en">Auto Pipeline</a>
+      <a href="./workflow.html" aria-current="page" data-lang="zh">流程图</a>
+      <a href="./workflow.html" aria-current="page" data-lang="en">Workflow</a>
+      <a href="./index.html#install" data-lang="zh">安装</a>
+      <a href="./index.html#install" data-lang="en">Install</a>
+      <a href="./index.html#commands" data-lang="zh">命令</a>
+      <a href="./index.html#commands" data-lang="en">Commands</a>
+      <a href="./index.html#walkthrough" data-lang="zh">场景走读</a>
+      <a href="./index.html#walkthrough" data-lang="en">Walkthroughs</a>
+      <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.md" data-lang="zh">README</a>
+      <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.en.md" data-lang="en">README</a>
+      <a class="gh" href="https://github.com/Spark-To-Paper-Skills/paper-wiki" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <div class="lang-switch">
+        <button id="btn-zh" class="active" onclick="setLang('zh')">中文</button>
+        <button id="btn-en" onclick="setLang('en')">EN</button>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Theme" title="Theme: system / light / dark" onclick="cycleTheme()">
+        <svg class="icon-sys" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<section class="page-head">
+  <div class="page-head-inner">
+    <div class="hero-badge">Workflow Architecture</div>
+    <h1 data-lang="zh">一张图看完<span class="gradient">整条流水线</span></h1>
+    <h1 data-lang="en">The whole <span class="gradient">pipeline</span> in one diagram</h1>
+    <p class="tagline" data-lang="zh">外层是知识回路——检索入库、逐篇精读、读成领域地图；内层是想法回路——立项审查、目标卡、进攻方向、便宜小实验、想法卡、查重法庭、加码闸、评级。过闸之后交给 <strong>Spark-to-Paper v2</strong> 跑实验出初稿，需要时再由 <strong>PaperJury</strong> 模拟评审。颜色按执行者区分，👤 处由人拍板。</p>
+    <p class="tagline" data-lang="en">The outer loop accumulates knowledge — retrieve, deep-read every paper, compile the notes into a field map. The inner loop spends it — scoping review, goal card, attack directions, one-night probes, idea card, novelty court, investment gate, tiering. Past the gate, <strong>Spark-to-Paper v2</strong> runs the experiments and drafts, and <strong>PaperJury</strong> mock-reviews when needed. Boxes are coloured by executor; 👤 marks the calls a human makes. <em>The diagram itself is in Chinese.</em></p>
+  </div>
+</section>
+
+<main>
+
+  <!-- 01 The diagram -->
+  <section class="section" id="diagram">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">01</span>
+        <span class="eyebrow-name" data-lang="zh">全流程</span>
+        <span class="eyebrow-name" data-lang="en">Full Pipeline</span>
+      </div>
+      <h2 data-lang="zh">paper-wiki · 全流程</h2>
+      <h2 data-lang="en">paper-wiki · full pipeline</h2>
+      <p class="section-lede" data-lang="zh">一条把「读论文」变成「出论文」的流水线：👤 人拍板的决定 · 🔒 机器自动把关 · 📒 只增不删的档案。自动模式下 <code>/wiki-auto</code> 指一个文件夹，自动跑到「评级」为止；👤 处由机器代签并留痕、记进收件箱，人回来可翻案。</p>
+      <p class="section-lede" data-lang="en">One pipeline that turns reading papers into writing one: 👤 human calls · 🔒 automatic machine checks · 📒 append-only records. In auto mode <code>/wiki-auto</code> takes a folder and runs to the tiering stage; the machine counter-signs the 👤 points, leaves a trace, and files it to the inbox — every call stays reversible when the human returns.</p>
+    </div>
+
+    <div class="wf-legend">
+      <span class="wf-legend-label" data-lang="zh">执行者</span>
+      <span class="wf-legend-label" data-lang="en">Executor</span>
+      <span class="wf-pill p-search"><i></i><span data-lang="zh">检索</span><span data-lang="en">Retrieve</span><em>wiki-searcher</em></span>
+      <span class="wf-pill p-compile"><i></i><span data-lang="zh">精读</span><span data-lang="en">Deep-read</span><em>wiki-compile</em></span>
+      <span class="wf-pill p-carto"><i></i><span data-lang="zh">制图</span><span data-lang="en">Map</span><em>wiki-cartographer</em></span>
+      <span class="wf-pill p-ideate"><i></i><span data-lang="zh">发想</span><span data-lang="en">Ideate</span><em>wiki-ideate</em></span>
+      <span class="wf-pill p-court"><i></i><span data-lang="zh">法庭</span><span data-lang="en">Court</span><em>wiki-critic</em></span>
+      <span class="wf-pill p-exec"><i></i><span data-lang="zh">执行</span><span data-lang="en">Execute</span><em>Spark-to-Paper v2</em></span>
+      <span class="wf-pill p-jury"><i></i><span data-lang="zh">评审</span><span data-lang="en">Review</span><em>PaperJury</em></span>
+      <span class="wf-pill p-human"><i></i><span data-lang="zh">人</span><span data-lang="en">Human</span><em>👤 · inbox</em></span>
+      <span class="wf-pill p-arch"><i></i><span data-lang="zh">档案</span><span data-lang="en">Archive</span><em data-lang="zh">非 agent</em><em data-lang="en">not an agent</em></span>
+    </div>
+
+    <div class="wf-panel">
+<svg viewBox="0 0 960 1640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="paper-wiki 全流程图 / paper-wiki full pipeline diagram">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z"/>
+  </marker>
+  <marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z"/>
+  </marker>
+  <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z"/>
+  </marker>
+  <marker id="arC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z"/>
+  </marker>
+
+  <filter id="fShadow" x="-20%" y="-20%" width="140%" height="140%">
+    <feDropShadow dx="0" dy="5" stdDeviation="8"/>
+  </filter>
+
+  <linearGradient id="g-search" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-compile" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-carto" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-ideate" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-court" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-exec" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-jury" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-human" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-arch" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-neutral" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-pink" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+  <linearGradient id="g-final" x1="0" y1="0" x2="0" y2="1"><stop offset="0"/><stop offset="1"/></linearGradient>
+</defs>
+
+<!-- ══════════ 分区标题与结构线 ══════════ -->
+<rect class="bar-compile" x="28" y="19" width="4" height="14" rx="2" opacity=".9"/>
+<text class="tx-compile" x="40" y="30" font-size="13.5" font-weight="650" letter-spacing="1">外层 · 知识回路 —— 先攒论文,再读成地图</text>
+<line class="rule" x1="40" y1="36" x2="920" y2="36" stroke-width="1"/>
+
+<rect class="bar-ideate" x="28" y="345" width="4" height="14" rx="2" opacity=".9"/>
+<text class="tx-ideate" x="40" y="356" font-size="13.5" font-weight="650" letter-spacing="1">内层 · 想法回路 —— 便宜地试错,分层地加码</text>
+<line class="rule" x1="40" y1="362" x2="920" y2="362" stroke-width="1"/>
+
+<!-- ══════════ 连线层(中性主干 + 低饱和功能线) ══════════ -->
+<g>
+  <line class="wire" x1="230" y1="118" x2="420" y2="146" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire" x1="730" y1="106" x2="540" y2="146" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire" x1="480" y1="194" x2="480" y2="238" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire" x1="590" y1="275" x2="646" y2="275" stroke-width="1.3" marker-end="url(#ar)"/>
+  <path class="wire" d="M 775 308 C 775 332, 360 314, 264 372" fill="none" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line class="wire" x1="205" y1="418" x2="290" y2="446" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 裁决 → 检索:需求拉动进新语料 -->
+  <path class="wire-search" d="M 640 440 C 628 360, 614 260, 601 178" fill="none" stroke-width="1.2" stroke-dasharray="5 4" opacity=".55" marker-end="url(#arC)"/>
+
+  <line class="wire" x1="480" y1="500" x2="480" y2="538" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire-human" x1="650" y1="472" x2="686" y2="480" stroke-width="1.1" stroke-dasharray="4 4" opacity=".7"/>
+  <line class="wire" x1="480" y1="598" x2="480" y2="634" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire" x1="480" y1="694" x2="480" y2="730" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire" x1="480" y1="794" x2="480" y2="832" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 缺口 / 意外发现 汇入 -->
+  <path class="wire-ideate" d="M 480 418 C 480 430, 240 690, 306 856" fill="none" stroke-width="1.1" stroke-dasharray="5 4" marker-end="url(#arG)" opacity=".6"/>
+  <path class="wire-ideate" d="M 755 418 C 755 550, 700 760, 654 852" fill="none" stroke-width="1.1" stroke-dasharray="5 4" marker-end="url(#arG)" opacity=".6"/>
+
+  <line class="wire" x1="480" y1="896" x2="480" y2="932" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 笔记库 → 法庭:比对语料供血 -->
+  <path class="wire-search" d="M 180 308 C 150 600, 200 860, 306 966" fill="none" stroke-width="1.4" opacity=".6" marker-end="url(#arC)"/>
+
+  <!-- 灵感支路 -->
+  <line class="wire-muse" x1="650" y1="962" x2="706" y2="962" stroke-width="1.2" marker-end="url(#arP)"/>
+  <path class="wire-muse" d="M 810 938 C 820 890, 750 878, 654 878" fill="none" stroke-width="1.1" stroke-dasharray="5 4" marker-end="url(#arP)" opacity=".65"/>
+
+  <!-- 审理前机制同构检索(需求拉动) -->
+  <path class="wire-search" d="M 650 946 C 720 922, 850 922, 900 878 C 912 840, 910 500, 908 300 C 906 210, 730 190, 604 189" fill="none" stroke-width="1.2" stroke-dasharray="5 4" opacity=".5" marker-end="url(#arC)"/>
+
+  <line class="wire" x1="480" y1="1012" x2="480" y2="1048" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire" x1="480" y1="1096" x2="480" y2="1132" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire" x1="480" y1="1192" x2="480" y2="1226" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 结果分流 -->
+  <line class="wire" x1="400" y1="1290" x2="270" y2="1336" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line class="wire" x1="560" y1="1290" x2="690" y2="1336" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 止损 → 复盘 -->
+  <line class="wire" x1="260" y1="1404" x2="260" y2="1470" stroke-width="1.2" marker-end="url(#ar)"/>
+  <path class="wire-ideate" d="M 150 1474 C 105 1330, 205 1125, 306 1078" fill="none" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arG)" opacity=".6"/>
+
+  <!-- 投稿闸 → 论文 -->
+  <line class="wire" x1="700" y1="1404" x2="700" y2="1440" stroke-width="1.3" marker-end="url(#ar)"/>
+  <path class="wire-muse" d="M 853 1466 C 902 1448, 902 1396, 853 1378" fill="none" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arP)" opacity=".75"/>
+  <line class="wire" x1="700" y1="1488" x2="700" y2="1524" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 新文章持续供血 -->
+  <path class="wire-search" d="M 900 275 C 955 430, 955 720, 950 870 C 946 925, 932 950, 916 960" fill="none" stroke-width="1.1" stroke-dasharray="2 5" opacity=".5" marker-end="url(#arC)"/>
+</g>
+
+<!-- ══════════ 卡片层 ══════════ -->
+<g filter="url(#fShadow)">
+  <rect class="cd e-search"  x="70"  y="42"   width="280" height="76" rx="10"/>
+  <rect class="cd e-human"   x="610" y="48"   width="280" height="58" rx="10"/>
+  <rect class="cd e-arch"    x="360" y="150"  width="240" height="44" rx="10"/>
+  <rect class="cd e-compile" x="130" y="242"  width="460" height="66" rx="10"/>
+  <rect class="cd e-carto"   x="650" y="242"  width="250" height="66" rx="10"/>
+  <rect class="cd e-ideate"  x="90"  y="378"  width="230" height="40" rx="20"/>
+  <rect class="cd e-ideate"  x="380" y="378"  width="200" height="40" rx="20"/>
+  <rect class="cd e-ideate"  x="640" y="378"  width="230" height="40" rx="20"/>
+  <rect class="cd e-court"   x="310" y="440"  width="340" height="60" rx="10"/>
+  <rect class="cd e-human"   x="690" y="448"  width="212" height="82" rx="10"/>
+  <rect class="cd e-ideate"  x="310" y="542"  width="340" height="56" rx="10"/>
+  <rect class="cd e-ideate"  x="310" y="638"  width="340" height="56" rx="10"/>
+  <rect class="cd e-ideate"  x="310" y="734"  width="340" height="60" rx="10"/>
+  <rect class="cd e-ideate"  x="310" y="836"  width="340" height="60" rx="10"/>
+  <rect class="cd e-court"   x="310" y="936"  width="340" height="76" rx="10"/>
+  <rect class="cd e-pink"    x="710" y="938"  width="200" height="50" rx="10"/>
+  <rect class="ring rg-ideate" x="306" y="1048" width="348" height="52" rx="26"/>
+  <rect class="cd gate-ideate" x="310" y="1052" width="340" height="44" rx="22"/>
+  <rect class="cd e-ideate"  x="310" y="1136" width="340" height="56" rx="10"/>
+  <rect class="cd e-exec"    x="310" y="1230" width="340" height="60" rx="10"/>
+  <rect class="cd e-neutral" x="110" y="1340" width="300" height="64" rx="10"/>
+  <rect class="cd e-jury"    x="550" y="1340" width="300" height="64" rx="10"/>
+  <rect class="cd e-neutral" x="110" y="1474" width="300" height="60" rx="10"/>
+  <rect class="ring rg-jury" x="546" y="1440" width="308" height="52" rx="26"/>
+  <rect class="cd gate-jury" x="550" y="1444" width="300" height="44" rx="22"/>
+  <rect class="cd e-final"   x="560" y="1528" width="280" height="52" rx="10"/>
+</g>
+
+<!-- 左缘执行者色条 -->
+<g>
+  <rect class="bar-search"  x="70"  y="49"   width="3" height="62" rx="1.5" opacity=".9"/>
+  <rect class="bar-human"   x="610" y="55"   width="3" height="44" rx="1.5" opacity=".9"/>
+  <rect class="bar-arch"    x="360" y="157"  width="3" height="30" rx="1.5" opacity=".7"/>
+  <rect class="bar-compile" x="130" y="249"  width="3" height="52" rx="1.5" opacity=".9"/>
+  <rect class="bar-carto"   x="650" y="249"  width="3" height="52" rx="1.5" opacity=".9"/>
+  <rect class="bar-court"   x="310" y="447"  width="3" height="46" rx="1.5" opacity=".9"/>
+  <rect class="bar-human"   x="690" y="455"  width="3" height="68" rx="1.5" opacity=".9"/>
+  <rect class="bar-ideate"  x="310" y="549"  width="3" height="42" rx="1.5" opacity=".9"/>
+  <rect class="bar-ideate"  x="310" y="645"  width="3" height="42" rx="1.5" opacity=".9"/>
+  <rect class="bar-ideate"  x="310" y="741"  width="3" height="46" rx="1.5" opacity=".9"/>
+  <rect class="bar-ideate"  x="310" y="843"  width="3" height="46" rx="1.5" opacity=".9"/>
+  <rect class="bar-court"   x="310" y="943"  width="3" height="62" rx="1.5" opacity=".9"/>
+  <rect class="bar-muse"    x="710" y="945"  width="3" height="36" rx="1.5" opacity=".85"/>
+  <rect class="bar-ideate"  x="310" y="1143" width="3" height="42" rx="1.5" opacity=".9"/>
+  <rect class="bar-exec"    x="310" y="1237" width="3" height="46" rx="1.5" opacity=".9"/>
+  <rect class="bar-arch"    x="110" y="1347" width="3" height="50" rx="1.5" opacity=".6"/>
+  <rect class="bar-jury"    x="550" y="1347" width="3" height="50" rx="1.5" opacity=".9"/>
+  <rect class="bar-arch"    x="110" y="1481" width="3" height="46" rx="1.5" opacity=".6"/>
+  <rect class="bar-final"   x="560" y="1535" width="3" height="38" rx="1.5" opacity=".6"/>
+</g>
+
+<!-- ══════════ 文字层 ══════════ -->
+<g>
+  <!-- 外层 · 知识回路 -->
+  <text class="t1" x="210" y="62" font-size="13" text-anchor="middle">AI 检索入库(需求驱动,无定时器)</text>
+  <text class="t2" x="210" y="82" font-size="11" text-anchor="middle">① 建库后一次全库分析补候选(免上限)</text>
+  <text class="t2" x="210" y="99" font-size="11" text-anchor="middle">② 问题卡生成后迭代完善(每卡限 10 篇)</text>
+
+  <text class="t1" x="750" y="72" font-size="13.5" text-anchor="middle">手动投放</text>
+  <text class="t2" x="750" y="92" font-size="11.5" text-anchor="middle">你自己挑好的论文 / 笔记,直接放进来</text>
+
+  <text class="t1" x="480" y="177" font-size="14" text-anchor="middle" font-weight="600">原料区 —— 启动资金</text>
+
+  <text class="cap tx-compile" x="494" y="222" font-size="12">逐篇精读入库</text>
+  <text class="cap tx-search" x="140" y="214" font-size="10">缺料兜底的三个入口(免上限;常态=先查库,备料靠问题卡迭代):</text>
+  <text class="cap tx-search" x="140" y="230" font-size="10">立项审查 · 查重审理 · 缺证据的假设</text>
+
+  <text class="t1" x="360" y="268" font-size="13.5" text-anchor="middle" font-weight="600">笔记库:每篇论文一张卡</text>
+  <text class="t2" x="360" y="290" font-size="11.5" text-anchor="middle">摘要 · 关键结论 · 出处可回查;另有概念卡与缺口清单</text>
+
+  <text class="cap t3" x="618" y="262" font-size="10.5" text-anchor="middle">每攒 8 篇</text>
+  <text class="t1" x="775" y="262" font-size="13" text-anchor="middle">制图员:把笔记读成领域地图</text>
+  <text class="t2" x="775" y="281" font-size="11" text-anchor="middle">大家默认什么 · 哪里在打架</text>
+  <text class="t2" x="775" y="297" font-size="11" text-anchor="middle">哪里挤满了 · 什么问题重要没人解</text>
+
+  <!-- 内层 · 想法回路 -->
+  <text class="tx-ideate" x="205" y="403" font-size="12.5" text-anchor="middle">① 从「好问题」出发(主路)</text>
+  <text class="tx-ideate" x="480" y="403" font-size="12.5" text-anchor="middle">② 从「文献缺口」出发</text>
+  <text class="tx-ideate" x="755" y="403" font-size="12.5" text-anchor="middle">③ 意外发现 · 事后补流程</text>
+
+  <text class="cap t3" x="470" y="306" font-size="10.5">从地图上挑个好问题,先记一行(零成本)</text>
+  <text class="cap tx-search" x="585" y="432" font-size="10">裁决前:先查库,缺料才出网</text>
+
+  <!-- b1 立项审查 -->
+  <text class="t1" x="480" y="463" font-size="13.5" text-anchor="middle" font-weight="600">立项审查:这问题真的还没人解决吗?</text>
+  <text class="t2" x="480" y="484" font-size="11.5" text-anchor="middle">逐篇核对文献,结论记入案卷 📒 · 值不值得做由人拍板 👤</text>
+
+  <!-- 收件箱(自动模式) -->
+  <text class="tx-human" x="796" y="468" font-size="12.5" text-anchor="middle">收件箱 📒(自动模式)</text>
+  <text class="t3" x="796" y="486" font-size="10" text-anchor="middle">机器代签的决定,在此留痕:</text>
+  <text class="t3" x="796" y="501" font-size="10" text-anchor="middle">机采立项 · 机核两问 · 机签判读/判死/豁免</text>
+  <text class="t3" x="796" y="518" font-size="10" text-anchor="middle">人回来批量复核,一律可翻案</text>
+
+  <!-- b2 目标卡 -->
+  <text class="t1" x="480" y="565" font-size="13.5" text-anchor="middle" font-weight="600">立项:写成一张目标卡</text>
+  <text class="t2" x="480" y="586" font-size="11.5" text-anchor="middle">只定问题和成功标准,不定方法 · 机器查「偷带方法」🔒</text>
+
+  <!-- b3 方向 -->
+  <text class="t1" x="480" y="661" font-size="13.5" text-anchor="middle" font-weight="600">开进攻方向:粗略路线,想错不罚</text>
+  <text class="t2" x="480" y="682" font-size="11.5" text-anchor="middle">比正式想法更早更粗更便宜 · 不受查重审查</text>
+
+  <!-- b4 小实验 -->
+  <text class="t1" x="480" y="757" font-size="13.5" text-anchor="middle" font-weight="600">便宜验证:一晚上的小实验</text>
+  <text class="t2" x="480" y="778" font-size="11.5" text-anchor="middle">先登记预测再看结果,防事后诸葛 · 全程记档 📒</text>
+
+  <text class="cap tx-ideate" x="494" y="820" font-size="11">文献里的线索 → 自己的实验证据</text>
+
+  <!-- b5 想法卡 -->
+  <text class="t1" x="480" y="859" font-size="13.5" text-anchor="middle" font-weight="600">此时才写正式的想法卡</text>
+  <text class="t2" x="480" y="880" font-size="11.5" text-anchor="middle">大胆假设一栏、证据撑得住的话一栏,分开写 · 机器查夸大 🔒</text>
+
+  <text class="cap tx-ideate" x="700" y="610" font-size="10.5">事后仍要走完整流程,一步不能少</text>
+
+  <!-- b6 查重法庭 -->
+  <text class="t1" x="480" y="959" font-size="13.5" text-anchor="middle" font-weight="600">查重法庭:和已有论文撞车了吗?</text>
+  <text class="t2" x="480" y="979" font-size="11.5" text-anchor="middle">说撞车必须引用对方原文、答满四个问题 🔒</text>
+  <text class="t2" x="480" y="999" font-size="11.5" text-anchor="middle">没有死刑判决,只有整改动作 · 结论入案卷,不许翻案 📒</text>
+
+  <text class="cap tx-search" x="132" y="626" font-size="11">笔记库全库 = 查重比对语料</text>
+  <text class="cap tx-search" x="132" y="643" font-size="11">(含外领域论文,按范围围栏标记内外)</text>
+
+  <!-- 灵感支路 -->
+  <text class="cap tx-muse" x="678" y="952" font-size="10.5" text-anchor="middle">外领域相似</text>
+  <text class="tx-muse" x="810" y="959" font-size="12.5" text-anchor="middle">别的领域做过类似的?</text>
+  <text class="t2" x="810" y="977" font-size="10.5" text-anchor="middle">存成灵感,不当罪证</text>
+  <text class="cap tx-muse" x="784" y="916" font-size="10.5" text-anchor="middle">灵感回流下一轮想法生成</text>
+
+  <text class="cap tx-search" x="890" y="470" font-size="10" transform="rotate(90 890 470)">审理前:按机制查库,缺料才出网</text>
+
+  <!-- 加码闸 -->
+  <text class="tx-ideate" x="480" y="1079" font-size="12.5" text-anchor="middle">🔒 查新·实据闸:查重过了 + 问题实据在手(或人签放行 👤)</text>
+  <text class="cap tx-ideate" x="664" y="1110" font-size="10.5">auto:缺证据自动补一个便宜小实验</text>
+  <text class="cap tx-ideate" x="494" y="1120" font-size="11">过闸才准投入更多 ↓</text>
+
+  <!-- b7 评级 -->
+  <text class="t1" x="480" y="1159" font-size="13.5" text-anchor="middle" font-weight="600">评级:这个想法值得投入多大?</text>
+  <text class="t2" x="480" y="1180" font-size="11.5" text-anchor="middle">四档:大工程 / 快速占坑 / 观点文 / 小改进 · 只分档,不打分</text>
+
+  <!-- 实验执行(现状) -->
+  <text class="t1" x="480" y="1253" font-size="13.5" text-anchor="middle" font-weight="600">实验执行:Spark-to-Paper v2</text>
+  <text class="t2" x="480" y="1274" font-size="11.5" text-anchor="middle">接过想法卡跑实验、出初稿 · 照卡上的判据判定,结果记台账 📒</text>
+
+  <text class="cap t3" x="248" y="1330" font-size="11">证据不支持</text>
+  <text class="cap t3" x="662" y="1330" font-size="11">证据支持</text>
+
+  <!-- 止损 -->
+  <text class="t1" x="260" y="1363" font-size="13" text-anchor="middle" font-weight="600">止损:停下来,但资产不扔</text>
+  <text class="t2" x="260" y="1384" font-size="11.5" text-anchor="middle">判死一个想法要人签字 👤</text>
+
+  <!-- 推进 -->
+  <text class="t1" x="700" y="1363" font-size="13" text-anchor="middle" font-weight="600">推进:把成果立起来</text>
+  <text class="t2" x="700" y="1384" font-size="11.5" text-anchor="middle">需要时再加验:PaperJury 模拟评审 / 与真实论文匿名对比</text>
+
+  <text class="cap t3" x="272" y="1442" font-size="10.5">每次止损记一笔</text>
+
+  <!-- 复盘 -->
+  <text class="t1" x="260" y="1497" font-size="13" text-anchor="middle" font-weight="600">复盘:杀得太狠还是太松?</text>
+  <text class="t2" x="260" y="1518" font-size="11.5" text-anchor="middle">统计误杀率 → 回头调整各道闸的松紧</text>
+  <text class="cap tx-ideate" x="205" y="1140" font-size="10.5">调整松紧</text>
+
+  <!-- 投稿闸 → 论文 -->
+  <text class="tx-jury" x="700" y="1471" font-size="12.5" text-anchor="middle">🔒 投稿闸:PaperJury 评审过 + 人最终点头 👤</text>
+  <text class="cap tx-muse" x="916" y="1422" font-size="10.5" transform="rotate(90 916 1422)" text-anchor="middle">没过:意见回炉,再实验再改稿</text>
+
+  <text class="t1" x="700" y="1550" font-size="13.5" text-anchor="middle" font-weight="600">论文产出</text>
+  <text class="t2" x="700" y="1570" font-size="11" text-anchor="middle">人真实参与写作 · 按会议规则披露 AI 使用</text>
+
+  <text class="cap tx-search" x="934" y="590" font-size="10.5" transform="rotate(90 934 590)">新论文随需求入库,一路供血:查重语料 · 文献线索 · 灵感</text>
+</g>
+
+<!-- ══════════ 执行者色签层 ══════════ -->
+<g>
+  <g class="badge b-search"><rect x="82" y="34" width="36" height="16" rx="8"/><text x="100" y="45.5">检索</text></g>
+  <g class="badge b-human"><rect x="622" y="40" width="24" height="16" rx="8"/><text x="634" y="51.5">人</text></g>
+  <g class="badge b-compile"><rect x="142" y="234" width="36" height="16" rx="8"/><text x="160" y="245.5">精读</text></g>
+  <g class="badge b-carto"><rect x="662" y="234" width="36" height="16" rx="8"/><text x="680" y="245.5">制图</text></g>
+  <g class="badge b-ideate"><rect x="102" y="370" width="36" height="16" rx="8"/><text x="120" y="381.5">发想</text></g>
+  <g class="badge b-ideate"><rect x="392" y="370" width="36" height="16" rx="8"/><text x="410" y="381.5">发想</text></g>
+  <g class="badge b-ideate"><rect x="652" y="370" width="36" height="16" rx="8"/><text x="670" y="381.5">发想</text></g>
+  <g class="badge b-court"><rect x="322" y="432" width="36" height="16" rx="8"/><text x="340" y="443.5">法庭</text></g>
+  <g class="badge b-human"><rect x="702" y="440" width="24" height="16" rx="8"/><text x="714" y="451.5">人</text></g>
+  <g class="badge b-ideate"><rect x="322" y="534" width="36" height="16" rx="8"/><text x="340" y="545.5">发想</text></g>
+  <g class="badge b-ideate"><rect x="322" y="630" width="36" height="16" rx="8"/><text x="340" y="641.5">发想</text></g>
+  <g class="badge b-ideate"><rect x="322" y="726" width="36" height="16" rx="8"/><text x="340" y="737.5">发想</text></g>
+  <g class="badge b-ideate"><rect x="322" y="828" width="36" height="16" rx="8"/><text x="340" y="839.5">发想</text></g>
+  <g class="badge b-court"><rect x="322" y="928" width="36" height="16" rx="8"/><text x="340" y="939.5">法庭</text></g>
+  <g class="badge b-ideate"><rect x="322" y="1128" width="36" height="16" rx="8"/><text x="340" y="1139.5">发想</text></g>
+  <g class="badge b-exec"><rect x="322" y="1222" width="36" height="16" rx="8"/><text x="340" y="1233.5">执行</text></g>
+  <g class="badge b-jury"><rect x="562" y="1332" width="36" height="16" rx="8"/><text x="580" y="1343.5">评审</text></g>
+  <g class="badge b-jury"><rect x="562" y="1436" width="36" height="16" rx="8"/><text x="580" y="1447.5">评审</text></g>
+</g>
+</svg>
+    </div>
+    <p class="wf-hint" data-lang="zh">← 左右滑动查看完整图 →</p>
+    <p class="wf-hint" data-lang="en">← scroll sideways for the full diagram →</p>
+
+    <div class="tip" data-lang="zh"><strong>👤 标记的决定</strong>（值不值得做 · 豁免 · 判死 · 改核心设定）：人在场时人拍板；自动模式下机器代签、一律留痕，人保留翻案权。其余检查与记录全部由机器自动执行。</div>
+    <div class="tip" data-lang="en"><strong>Decisions marked 👤</strong> (worth doing · waiver · retirement · changing core assumptions) are the human's when a human is present; in auto mode the machine counter-signs them, always with a trace, and the human keeps the right to reverse. Every other check and record runs automatically.</div>
+    <div class="tip teal" data-lang="zh"><strong>整条流水线的原则：确定性分期付款</strong>——每一步只承诺当前证据买得起的那部分；大胆留给假设，严格留给验收。</div>
+    <div class="tip teal" data-lang="en"><strong>The principle behind the whole pipeline: pay for certainty in instalments</strong> — each step only promises as much as the current evidence can afford. Boldness belongs to the hypothesis; strictness belongs to the acceptance test.</div>
+  </section>
+
+  <!-- 02 How to read it -->
+  <div class="band">
+  <section class="section" id="loops">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">02</span>
+        <span class="eyebrow-name" data-lang="zh">两个回路</span>
+        <span class="eyebrow-name" data-lang="en">Two Loops</span>
+      </div>
+      <h2 data-lang="zh">外层攒知识，内层花知识</h2>
+      <h2 data-lang="en">The outer loop earns knowledge; the inner loop spends it</h2>
+      <p class="section-lede" data-lang="zh">图上的四种执行者颜色对应四类主体：paper-wiki 自己的环节（检索 / 精读 / 制图 / 发想 / 法庭）、执行实验的 Spark-to-Paper v2、模拟评审的 PaperJury，以及人。灰色是档案，不是 agent。</p>
+      <p class="section-lede" data-lang="en">The four executor colours map to four actors: paper-wiki's own stages (retrieve / deep-read / map / ideate / court), Spark-to-Paper v2 running the experiments, PaperJury mock-reviewing, and the human. Grey is the archive — not an agent.</p>
+    </div>
+    <div class="duo-grid">
+      <div class="duo-card">
+        <h3 data-lang="zh">📚 外层 · 知识回路</h3>
+        <h3 data-lang="en">📚 Outer loop · knowledge</h3>
+        <p data-lang="zh">检索按需拉新语料，没有定时器；每篇论文逐页精读成一张笔记卡，摘要、关键结论、出处可回查。每攒够一批，制图员把笔记读成领域地图：大家默认什么、哪里在打架、哪里挤满了、什么问题重要却没人解。</p>
+        <p data-lang="zh">笔记库同时是查重法庭的比对语料——含外领域论文，按范围围栏标记内外。</p>
+        <p data-lang="en">Retrieval pulls new material on demand — no timers. Every paper is read page by page into one note card: summary, key findings, traceable sources. Once enough accumulate, the cartographer reads the notes into a field map: shared assumptions, live disputes, crowded corners, and important problems nobody has solved.</p>
+        <p data-lang="en">The same note library doubles as the comparison corpus for the novelty court — out-of-field papers included, marked in or out by the scope fence.</p>
+      </div>
+      <div class="duo-card teal">
+        <h3 data-lang="zh">🧪 内层 · 想法回路</h3>
+        <h3 data-lang="en">🧪 Inner loop · ideas</h3>
+        <p data-lang="zh">从好问题、文献缺口或意外发现三个入口进来，先过立项审查，写成只定问题不定方法的目标卡，再开粗糙的进攻方向；一晚上的小实验先登记预测再看结果。有了自己的证据才写正式想法卡，交查重法庭审理。</p>
+        <p data-lang="zh">过了「查新 · 实据闸」才准加码：评级只分四档不打分，然后才轮到实验执行与投稿闸。</p>
+        <p data-lang="en">Three entrances — a good problem, a literature gap, or an accidental finding. Scoping review first, then a goal card that fixes the problem and the success criteria but not the method, then rough attack directions. A one-night probe registers its prediction before it looks at the result. Only with your own evidence does a formal idea card get written and taken to the novelty court.</p>
+        <p data-lang="en">Past the novelty-and-evidence gate, investment scales up: tiering sorts into four tiers without scoring, and only then come execution and the submission gate.</p>
+      </div>
+    </div>
+    <div class="back-links">
+      <a href="./index.html" data-lang="zh">← 回到 paper-wiki 首页</a>
+      <a href="./index.html" data-lang="en">← Back to paper-wiki home</a>
+      <a href="./index.html#auto" data-lang="zh">/wiki-auto 自动流水线 →</a>
+      <a href="./index.html#auto" data-lang="en">The /wiki-auto pipeline →</a>
+    </div>
+  </section>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <div data-lang="zh">
+    <strong style="color:var(--ink2)">paper-wiki</strong>
+    <span class="footer-sep"></span>MIT 许可证
+    <span class="footer-sep"></span><a href="./index.html">首页</a>
+    <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki">GitHub</a>
+    <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.md">README</a>
+    <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/TUTORIAL.md">命令教程</a>
+    <div class="org-line">✨ <a href="https://github.com/Spark-To-Paper-Skills">Spark-To-Paper-Skills</a> 组织出品<span class="footer-sep"></span>姊妹项目：<a href="https://spark-to-paper-skills.github.io/spark-to-paper-skills/">spark-to-paper-skills</a>（一个 spark 进，一篇论文出）</div>
+    <div class="org-line"><i>论文进。图谱出。idea 带着评级来见你。</i></div>
+  </div>
+  <div data-lang="en">
+    <strong style="color:var(--ink2)">paper-wiki</strong>
+    <span class="footer-sep"></span>MIT License
+    <span class="footer-sep"></span><a href="./index.html">Home</a>
+    <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki">GitHub</a>
+    <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.en.md">README</a>
+    <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/TUTORIAL.md">Tutorial</a>
+    <div class="org-line">✨ From the <a href="https://github.com/Spark-To-Paper-Skills">Spark-To-Paper-Skills</a> org<span class="footer-sep"></span>sister project: <a href="https://spark-to-paper-skills.github.io/spark-to-paper-skills/">spark-to-paper-skills</a> (one spark in, one paper out)</div>
+    <div class="org-line"><i>Papers in. Graph out. Ideas come back rated.</i></div>
+  </div>
+</footer>
+
+<script>
+var PAGE_TITLES = { zh: '流程架构 · paper-wiki', en: 'Workflow · paper-wiki' };
+function setLang(lang) {
+  document.querySelectorAll('[data-lang]').forEach(function(el) {
+    el.style.display = el.getAttribute('data-lang') === lang ? '' : 'none';
+  });
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  document.title = PAGE_TITLES[lang];
+  history.replaceState(null, '', '#' + lang);
+}
+
+/* Theme: three-way cycle system → light → dark, persisted; respects prefers-color-scheme in system mode. */
+var THEME_KEY = 'pw-theme';
+function resolveTheme(choice) {
+  if (choice === 'light' || choice === 'dark') return choice;
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+function applyThemeChoice(choice) {
+  if (choice === 'system') { localStorage.removeItem(THEME_KEY); }
+  else { localStorage.setItem(THEME_KEY, choice); }
+  var d = document.documentElement;
+  d.setAttribute('data-theme-choice', choice);
+  d.setAttribute('data-theme', resolveTheme(choice));
+}
+function cycleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme-choice') || 'system';
+  var next = cur === 'system' ? 'light' : (cur === 'light' ? 'dark' : 'system');
+  applyThemeChoice(next);
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    if ((document.documentElement.getAttribute('data-theme-choice') || 'system') === 'system') {
+      document.documentElement.setAttribute('data-theme', resolveTheme('system'));
+    }
+  });
+}
+
+/* Topbar shadow on scroll */
+(function() {
+  var bar = document.getElementById('topbar');
+  function onScroll() { bar.classList.toggle('scrolled', window.scrollY > 8); }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+
+setLang(location.hash === '#en' ? 'en' : 'zh');
+</script>
+</body>
+</html>
