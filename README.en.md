@@ -82,8 +82,9 @@ The manual actions are unchanged.
   </tr>
 </table>
 
-All of this builds on pre-existing v0.3 machinery: six-value novelty verdicts
-(there is no kill verdict) and the goal → direction → probe → idea spiral.
+All of this builds on the existing adjudication and probe foundation:
+six-value novelty verdicts (there is no kill verdict) and the
+goal → direction → probe → idea spiral.
 
 ---
 
