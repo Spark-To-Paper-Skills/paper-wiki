@@ -530,7 +530,7 @@ resolution_type_guess: 真矛盾 | 测量 artifact | 隐藏变量 | 适用域不
 - `kind: novelty`（既有六值）：`identical|transfer|motivation-overlap|component-overlap|crowded|open`。
 - `kind: openness`（新三值）：`problem-open|problem-solved|partially-solved`。
 
-`kind: openness` 条目额外携带两个专属字段：`goal_ref`（指向 `wiki/field/problems/<goal-id>.md`）与 `criteria_delta`（对方满足了我方哪几条 facet，`partially-solved` 时必填）。自 2026-08-12 起 openness 条目另必填 `papers_checked`——逐个列出实际裁决过的 paper id 清单，不收裸数字；去重条数低于备料检查算出的邻域命中数 → 裁决无效。novelty 轨道的 `idea`/`actions_taken` 字段对 openness 条目不适用，留空或省略。
+`kind: openness` 条目额外携带两个专属字段：`goal_ref`（指向 `wiki/field/problems/<goal-id>.md`）与 `criteria_delta`（对方满足了我方哪几条 facet，`partially-solved` 时必填）。自 2026-08-12 起 openness 条目另必填 `papers_checked`——逐个列出实际裁决过的 paper id 清单，不收裸数字；去重条数低于备料检查算出的邻域命中数 → 裁决无效。`problem-solved`/`partially-solved` 裁决的 `papers_checked` 不得为空——判「已解决」必须点名解决者；邻域命中数为 0 时对数闸空转（0<0 恒假），不构成空清单豁免。novelty 轨道的 `idea`/`actions_taken` 字段对 openness 条目不适用，留空或省略。
 
 退化开放性裁决只裁两问：Q1 同一性判据按外延化口径（判"对方论文的已报告结果能否满足我方 main facet 的一个实例化"，满足即命中；语句内涵比较只作预筛），Q4 按 F11 标准（对方明文结论句宣称解决）；不裁 Q2/Q3（问题层无机制可比，这是刻意退化而非遗漏）。问题层的主风险方向与方法层相反：**主风险是漏杀**（在已被解决的问题上烧探针），不是误杀。
 

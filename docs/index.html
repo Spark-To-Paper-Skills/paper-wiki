@@ -158,6 +158,8 @@ a { color: var(--blue-deep); }
 .hero-content { position: relative; max-width: 820px; margin: 0 auto; }
 .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--tint-orange); border: 1px solid var(--blue-pale); border-radius: var(--r-pill); padding: 6px 18px; font-size: 13px; font-weight: 600; color: var(--blue-on-tint); margin-bottom: 26px; font-family: var(--font-mono); }
 :root[data-theme=dark] .hero-badge { border-color: rgba(226,142,105,.35); }
+a.hero-news { margin-left: 8px; text-decoration: none; cursor: pointer; transition: border-color .2s; }
+a.hero-news:hover { border-color: var(--blue); }
 .hero h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.14; margin-bottom: 20px; color: var(--ink2); }
 .hero h1 .gradient { background: var(--grad-2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .hero .tagline { font-size: clamp(1rem, 2vw, 1.15rem); color: var(--lede); max-width: 660px; margin: 0 auto 38px; line-height: 1.8; }
@@ -323,6 +325,8 @@ a { color: var(--blue-deep); }
       <a href="#concept" data-lang="en">Concept</a>
       <a href="#auto" data-lang="zh">自动流水线</a>
       <a href="#auto" data-lang="en">Auto Pipeline</a>
+      <a href="#guidance" data-lang="zh">外部引导</a>
+      <a href="#guidance" data-lang="en">Guidance</a>
       <a href="./workflow.html" data-lang="zh">流程图</a>
       <a href="./workflow.html" data-lang="en">Workflow</a>
       <a href="#install" data-lang="zh">安装</a>
@@ -353,6 +357,7 @@ a { color: var(--blue-deep); }
 <section class="hero">
   <div class="hero-content">
     <div class="hero-badge">Claude Code + Codex · MIT License</div>
+    <a class="hero-badge hero-news" href="#guidance">📰 <span data-lang="zh">v2.1.0 新特性：Guidance 引导层 →</span><span data-lang="en">New in v2.1.0: the Guidance overlay →</span></a>
     <h1 data-lang="zh">把论文编译成<span class="gradient">知识图谱</span></h1>
     <p class="tagline" data-lang="zh">Claude Code 或 Codex 把论文与课件逐页真读完，编译成结构化、双向链接的知识库；再把整个文件夹交给 <code style="font-family:var(--font-mono);font-size:.92em">/wiki-auto</code>——睡一觉，醒来收获带四档评级的 idea 卡。不是 RAG，是 LLM Wiki。</p>
     <h1 data-lang="en">Compile Papers into a <span class="gradient">Knowledge Graph</span></h1>
@@ -476,11 +481,39 @@ a { color: var(--blue-deep); }
   </section>
   </div>
 
-  <!-- 03 INBOX + machine signing -->
-  <section class="section" id="inbox">
+  <!-- Guidance overlay -->
+  <section class="section" id="guidance">
     <div class="section-header">
       <div class="section-eyebrow">
         <span class="eyebrow-num" aria-hidden="true">03</span>
+        <span class="eyebrow-name" data-lang="zh">外部引导</span>
+        <span class="eyebrow-name" data-lang="en">Guidance Overlay</span>
+      </div>
+      <h2 data-lang="zh">GUIDANCE.md：方向先于语料时，注入引导而不接管流程</h2>
+      <h2 data-lang="en">GUIDANCE.md: inject guidance when directions arrive before the corpus</h2>
+      <p class="section-lede" data-lang="zh">v2.1 新增。有时方向比语料先到——你自己的想法、GPT 分析出的热点清单、外部知识图谱的产出，或「这轮只有一台 V100」的现实。把它们写进实例根一个可选的 <code>GUIDANCE.md</code>，检索与发想就会优先朝那边看。它是建议性上下文：星级评分一律无效，断言要被 wiki 引用必须经正常检索 → 入库 → 编译重新推导；立项、裁决、评级的标准一条不变。</p>
+      <p class="section-lede" data-lang="en">New in v2.1. Sometimes directions arrive before the corpus — your own hunches, a GPT-generated list of hot topics, output from an external knowledge graph, or the plain fact that this round you only have one V100. Write them into an optional <code>GUIDANCE.md</code> at the instance root, and search &amp; ideation lean that way. It is advisory context only: star ratings carry no weight, and any claim must re-enter through the normal search &rarr; import &rarr; compile path before the wiki will cite it. Adoption, adjudication, and rating standards do not move.</p>
+    </div>
+    <div class="steps">
+      <div class="step" data-lang="zh"><strong>只买注意力，不买裁决</strong><p>引导决定先看哪里、先检索什么、先备什么料；好不好、立不立项、评几档，仍由既有裁决与证据闸说了算。</p></div>
+      <div class="step" data-lang="zh"><strong>零耦合</strong><p>不放这个文件，一切照旧；删掉它，干净退出。协议、命令、schema、lint 对它零感知——注入物自带说明书。</p></div>
+      <div class="step" data-lang="zh"><strong>auto 天然支持</strong><p><code>/wiki-auto</code> 各环节开工都读 <code>research.md</code>，一行指针就让整条无人值守链继承引导，不加任何新步骤。</p></div>
+      <div class="step" data-lang="zh"><strong>强意图走正门</strong><p>引导适合弱倾向；已经确定要做的方向，直接写成候选或发起立项——人签本身就是最高级别的倾斜。</p></div>
+      <div class="step" data-lang="en"><strong>Buys attention, not verdicts</strong><p>Guidance decides where to look first — what to search, what to stock. Whether a direction is good, adopted, or highly rated stays with the existing gates and evidence.</p></div>
+      <div class="step" data-lang="en"><strong>Zero coupling</strong><p>No file, no change. Delete it and you exit cleanly. The protocol, commands, schemas, and lint know nothing about it — the injection carries its own contract.</p></div>
+      <div class="step" data-lang="en"><strong>Auto-native</strong><p>Every <code>/wiki-auto</code> stage already reads <code>research.md</code> at the start, so one pointer line makes the whole unattended chain inherit the guidance — no new steps.</p></div>
+      <div class="step" data-lang="en"><strong>Strong intent takes the front door</strong><p>Guidance is for leanings. A direction you are sure about goes straight into the candidate list or goal adoption — a human signature is the strongest tilt there is.</p></div>
+    </div>
+    <div class="tip" data-lang="zh"><strong>怎么启用？</strong>复制模板到实例根、在 <code>research.md</code> 加一行指针，两步完成——规范与模板见 <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/GUIDANCE.md" style="font-weight:700">docs/GUIDANCE.md →</a></div>
+    <div class="tip" data-lang="en"><strong>How to enable:</strong> copy the template to the instance root and add one pointer line to <code>research.md</code> — spec and template at <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/GUIDANCE.md" style="font-weight:700">docs/GUIDANCE.md →</a></div>
+  </section>
+
+  <!-- 03 INBOX + machine signing -->
+  <div class="band">
+  <section class="section" id="inbox">
+    <div class="section-header">
+      <div class="section-eyebrow">
+        <span class="eyebrow-num" aria-hidden="true">04</span>
         <span class="eyebrow-name" data-lang="zh">机器决策</span>
         <span class="eyebrow-name" data-lang="en">Machine Decisions</span>
       </div>
@@ -508,13 +541,13 @@ a { color: var(--blue-deep); }
       </div>
     </div>
   </section>
+  </div>
 
   <!-- 04 Gate + fresh eyes -->
-  <div class="band">
   <section class="section" id="gate">
     <div class="section-header">
       <div class="section-eyebrow">
-        <span class="eyebrow-num" aria-hidden="true">04</span>
+        <span class="eyebrow-num" aria-hidden="true">05</span>
         <span class="eyebrow-name" data-lang="zh">投入闸门</span>
         <span class="eyebrow-name" data-lang="en">Investment Gate</span>
       </div>
@@ -544,13 +577,13 @@ a { color: var(--blue-deep); }
     <div class="tip" data-lang="zh"><strong>既有机制不变：</strong>六值查新裁定、「没有判死型 verdict」、goal → direction → probe → idea 螺旋都是原有机制；闸门只是把它们变成投入实验前的硬性前置。</div>
     <div class="tip" data-lang="en"><strong>Pre-existing machinery unchanged:</strong> six-value novelty verdicts, "there is no kill verdict", and the goal → direction → probe → idea spiral all predate this gate — the gate simply makes them hard preconditions for experiment investment.</div>
   </section>
-  </div>
 
   <!-- 05 Observability -->
+  <div class="band">
   <section class="section" id="observability">
     <div class="section-header">
       <div class="section-eyebrow">
-        <span class="eyebrow-num" aria-hidden="true">05</span>
+        <span class="eyebrow-num" aria-hidden="true">06</span>
         <span class="eyebrow-name" data-lang="zh">可观测性</span>
         <span class="eyebrow-name" data-lang="en">Observability</span>
       </div>
@@ -578,13 +611,13 @@ a { color: var(--blue-deep); }
       <li data-lang="en"><span>Anomaly stats (reversals / mismatches / citation MISS / discards / over-age suspensions / missing stamps)</span></li>
     </ol>
   </section>
+  </div>
 
   <!-- 06 Tooling -->
-  <div class="band">
   <section class="section" id="tooling">
     <div class="section-header">
       <div class="section-eyebrow">
-        <span class="eyebrow-num" aria-hidden="true">06</span>
+        <span class="eyebrow-num" aria-hidden="true">07</span>
         <span class="eyebrow-name" data-lang="zh">机械核查</span>
         <span class="eyebrow-name" data-lang="en">Mechanical Checks</span>
       </div>
@@ -610,13 +643,13 @@ a { color: var(--blue-deep); }
       </div>
     </div>
   </section>
-  </div>
 
   <!-- 07 Variants -->
+  <div class="band">
   <section class="section" id="variants">
     <div class="section-header">
       <div class="section-eyebrow">
-        <span class="eyebrow-num" aria-hidden="true">07</span>
+        <span class="eyebrow-num" aria-hidden="true">08</span>
         <span class="eyebrow-name" data-lang="zh">两种变体</span>
         <span class="eyebrow-name" data-lang="en">Two Variants</span>
       </div>
@@ -644,13 +677,13 @@ a { color: var(--blue-deep); }
       </div>
     </div>
   </section>
+  </div>
 
   <!-- 08 Install -->
-  <div class="band">
   <section class="section" id="install">
     <div class="section-header">
       <div class="section-eyebrow">
-        <span class="eyebrow-num" aria-hidden="true">08</span>
+        <span class="eyebrow-num" aria-hidden="true">09</span>
         <span class="eyebrow-name" data-lang="zh">安装</span>
         <span class="eyebrow-name" data-lang="en">Install</span>
       </div>
@@ -676,13 +709,13 @@ codex plugin add paper-wiki@paper-wiki</code></pre></div>
     <div data-lang="zh"><p class="desc">创建后任选一端：Claude Code 运行 <code>/wiki-init</code>；Codex 运行 <code>$paper-wiki-project wiki-init</code>。</p></div>
     <div data-lang="en"><p class="desc">Choose one runtime: Claude Code runs <code>/wiki-init</code>; Codex runs <code>$paper-wiki-project wiki-init</code>.</p></div>
   </section>
-  </div>
 
   <!-- 09 Commands -->
+  <div class="band">
   <section class="section" id="commands">
     <div class="section-header">
       <div class="section-eyebrow">
-        <span class="eyebrow-num" aria-hidden="true">09</span>
+        <span class="eyebrow-num" aria-hidden="true">10</span>
         <span class="eyebrow-name" data-lang="zh">命令</span>
         <span class="eyebrow-name" data-lang="en">Commands</span>
       </div>
@@ -712,13 +745,13 @@ codex plugin add paper-wiki@paper-wiki</code></pre></div>
     <div class="tip" data-lang="zh"><strong>查询 wiki</strong> 用内置 <code>wiki-teach</code> action。旧的 <code>/wiki-ask</code> 已退役为 <code>wiki-teach</code> 的兼容别名，不计入 7 个 action。</div>
     <div class="tip" data-lang="en"><strong>To query the wiki,</strong> use the built-in <code>wiki-teach</code> action. The old <code>/wiki-ask</code> is a retired compatibility alias for <code>wiki-teach</code> and is not counted among the seven.</div>
   </section>
+  </div>
 
   <!-- 10 Walkthroughs -->
-  <div class="band">
   <section class="section" id="walkthrough">
     <div class="section-header">
       <div class="section-eyebrow">
-        <span class="eyebrow-num" aria-hidden="true">10</span>
+        <span class="eyebrow-num" aria-hidden="true">11</span>
         <span class="eyebrow-name" data-lang="zh">场景走读</span>
         <span class="eyebrow-name" data-lang="en">Walkthroughs</span>
       </div>
@@ -764,13 +797,13 @@ codex plugin add paper-wiki@paper-wiki</code></pre></div>
       <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/WALKTHROUGH.md" style="color:var(--blue-deep);text-decoration:none;font-weight:600;font-size:15px;" data-lang="en">📖 Read full walkthroughs →</a>
     </p>
   </section>
-  </div>
 
   <!-- 11 Layout -->
+  <div class="band">
   <section class="section" id="layout">
     <div class="section-header">
       <div class="section-eyebrow">
-        <span class="eyebrow-num" aria-hidden="true">11</span>
+        <span class="eyebrow-num" aria-hidden="true">12</span>
         <span class="eyebrow-name" data-lang="zh">项目结构</span>
         <span class="eyebrow-name" data-lang="en">Project Layout</span>
       </div>
@@ -808,6 +841,7 @@ codex plugin add paper-wiki@paper-wiki</code></pre></div>
       <code>docs/llm-wiki.protocol.yaml</code><span class="desc">— machine-readable behavior contract</span>
     </div>
   </section>
+  </div>
 
 </main>
 

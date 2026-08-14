@@ -94,7 +94,10 @@ Instance file, created on the first auto run, append-only rows
 7. **Codify + rate.** Codify hypotheses into idea cards (`status: DRAFT`)
    under `wiki-ideate`'s auto-run lint clause (fix once, else discard).
    Then run the tiering step (`idea_tiering`) in a fresh context fed only
-   the card file itself (`auto_run.fresh_eyes` — no ideation context, guards
+   the card file itself plus the field-layer anchor target(s) its
+   `important_problem` references — anchor verification is an existing
+   tiering duty, so the whitelist must carry the anchor files
+   (`auto_run.fresh_eyes` — still no ideation context, guards
    self-rating inflation), write back
    `complexity_tier`（四档）/`execution`/`interest`/`venue_targets`, and
    advance `DRAFT` → `SCORED`. Rating does not wait for novelty critique.

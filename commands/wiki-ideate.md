@@ -107,7 +107,10 @@ Code slash command.
         carries res judicata force and subscribes to retro-check. openness
         条目必列 `papers_checked` 清单——逐个列出实际裁决过的 paper id,
         不收裸数字(声称查过就列得出来);清单去重条数 < 备料检查(ii.5)
-        已算出的邻域命中数 → 该裁决无效,须重裁。 The risk
+        已算出的邻域命中数 → 该裁决无效,须重裁。`problem-solved` /
+        `partially-solved` 的裁决 `papers_checked` 不得为空——判「已解决」
+        必须点名解决者;邻域命中数为 0 时前一句的对数闸空转(0<0 恒假),
+        不构成空清单的豁免。 The risk
         direction here is the **opposite** of the method layer: the primary
         risk is a **miss** (burning probes on an already-solved problem), so
         adjudication should weight toward catching the "already solved"

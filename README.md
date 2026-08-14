@@ -20,12 +20,19 @@
 </p>
 
 <p align="center">
-  🔥 <a href="#-v2-新特性">v2 新特性</a> &middot; ⚡ <a href="#-安装">安装</a> &middot; 🗺️ <a href="#️-一套-wiki两端操作">调用映射</a> &middot; 🧠 <a href="#-llm-wiki-vs-rag">Wiki vs RAG</a> &middot; 🔄 <a href="#-工作流">工作流</a> &middot; 🤖 <a href="#-自动流水线wiki-auto">自动流水线</a> &middot; 🚀 <a href="#-创建双端项目">创建项目</a> &middot; 📁 <a href="#-仓库与生成项目结构">结构</a>
+  🔥 <a href="#-v2-新特性">v2 新特性</a> &middot; 🧭 <a href="#-guidance-引导层v21">Guidance</a> &middot; ⚡ <a href="#-安装">安装</a> &middot; 🗺️ <a href="#️-一套-wiki两端操作">调用映射</a> &middot; 🧠 <a href="#-llm-wiki-vs-rag">Wiki vs RAG</a> &middot; 🔄 <a href="#-工作流">工作流</a> &middot; 🤖 <a href="#-自动流水线wiki-auto">自动流水线</a> &middot; 🚀 <a href="#-创建双端项目">创建项目</a> &middot; 📁 <a href="#-仓库与生成项目结构">结构</a>
 </p>
 
 <p align="center">
   <sub>7 核心 action（init / compile / search-latest / critique / ideate / teach / AUTO）&middot; 4 sub-agent（searcher / critic / ideator / cartographer）&middot; 2 变体（research / course）&middot; GPU-only OCR</sub>
 </p>
+
+---
+
+## 📰 News
+
+- **2026-08-14 — v2.1.0**:新增 **Guidance 引导层** —— 一个可选的 `GUIDANCE.md`,把外部初步方向(你的想法、GPT 分析出的热点清单、外部知识图谱的产出)、算力约束与时限注入为建议性上下文:检索与发想朝它倾斜,裁决与评级一条不变;零耦合,删文件即卸载,`/wiki-auto` 天然继承。规范与模板:[docs/GUIDANCE.md](docs/GUIDANCE.md)。同批加固两处裁决闸(「已解决」裁决必须点名解决者;评级白名单补上挂靠核验所需的锚目标)。
+- **2026-08-13 — v2.0.0**:`/wiki-auto` 全自动流水线发布——文件夹进,带四档评级的 idea 卡出,每个机器决策留痕可翻案。
 
 ---
 
@@ -76,6 +83,21 @@ v2 的头条只有一个：**丢进一个文件夹，醒来收获带四档评级
 
 这套机制建立在 v0.3 既有机制之上：六值查新结论（没有「判死」这一档）、
 goal → direction → probe → idea 螺旋。
+
+---
+
+## 🧭 Guidance 引导层(v2.1)
+
+方向比语料先到怎么办?你自己的想法、GPT 分析出的热点清单、外部知识图谱的产出、
+「这轮只有一台 V100」的算力现实——在实例根放一个可选的 `GUIDANCE.md`,再往
+`research.md` 加一行指针,检索与发想就会优先朝那边看。
+
+- **只买注意力,不买裁决**:引导决定先看哪里、先检索什么、先备什么料;好不好、立不立项、评几档,仍由既有裁决与证据闸说了算。星级评分一律无效;断言要被 wiki 引用,必须经正常检索 → 入库 → 编译重新推导。
+- **零耦合**:不放这个文件,一切照旧;删掉它,干净退出。协议、命令、schema、lint 对它零感知——注入物自带说明书。
+- **auto 天然支持**:`/wiki-auto` 各环节开工都读 `research.md`,一行指针让整条无人值守链继承引导,零新步骤。
+- **强意图走正门**:引导适合弱倾向;确定要做的方向直接写成候选行或发起立项——人签本身就是最高级别的倾斜。
+
+两步启用、一步卸载,规范与可复制模板见 [docs/GUIDANCE.md](docs/GUIDANCE.md)。
 
 ---
 

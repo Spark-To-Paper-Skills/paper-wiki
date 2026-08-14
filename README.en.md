@@ -20,12 +20,19 @@
 </p>
 
 <p align="center">
-  🔥 <a href="#-whats-new-in-v2">What's New in v2</a> &middot; ⚡ <a href="#-install">Install</a> &middot; 🗺️ <a href="#️-one-wiki-two-runtimes">Invocation Map</a> &middot; 🧠 <a href="#-llm-wiki-vs-rag">Wiki vs RAG</a> &middot; 🔄 <a href="#-workflow">Workflow</a> &middot; 🤖 <a href="#-the-auto-pipeline-wiki-auto">Auto Pipeline</a> &middot; 🚀 <a href="#-create-a-dual-runtime-project">Create a Project</a> &middot; 📁 <a href="#-repository-and-project-layout">Layout</a>
+  🔥 <a href="#-whats-new-in-v2">What's New in v2</a> &middot; 🧭 <a href="#-the-guidance-overlay-v21">Guidance</a> &middot; ⚡ <a href="#-install">Install</a> &middot; 🗺️ <a href="#️-one-wiki-two-runtimes">Invocation Map</a> &middot; 🧠 <a href="#-llm-wiki-vs-rag">Wiki vs RAG</a> &middot; 🔄 <a href="#-workflow">Workflow</a> &middot; 🤖 <a href="#-the-auto-pipeline-wiki-auto">Auto Pipeline</a> &middot; 🚀 <a href="#-create-a-dual-runtime-project">Create a Project</a> &middot; 📁 <a href="#-repository-and-project-layout">Layout</a>
 </p>
 
 <p align="center">
   <sub>7 core actions (init / compile / search-latest / critique / ideate / teach / AUTO) &middot; 4 sub-agents (searcher / critic / ideator / cartographer) &middot; 2 variants (research / course) &middot; GPU-only OCR</sub>
 </p>
+
+---
+
+## 📰 News
+
+- **2026-08-14 — v2.1.0**: New **Guidance overlay** — an optional `GUIDANCE.md` that injects external preliminary directions (your own hunches, a GPT-generated list of hot topics, external knowledge-graph output), compute constraints, and deadlines as advisory context: search and ideation lean toward it while adjudication and rating stay untouched; zero coupling, delete the file to uninstall, inherited natively by `/wiki-auto`. Spec & template: [docs/GUIDANCE.md](docs/GUIDANCE.md). Two adjudication gates hardened in the same batch (a "solved" verdict must name the solver; the rating whitelist now carries the anchor targets it is asked to verify).
+- **2026-08-13 — v2.0.0**: The `/wiki-auto` unattended pipeline ships — a folder in, four-tier-rated idea cards out, every machine decision traced and reversible.
 
 ---
 
@@ -77,6 +84,23 @@ The manual actions are unchanged.
 
 All of this builds on pre-existing v0.3 machinery: six-value novelty verdicts
 (there is no kill verdict) and the goal → direction → probe → idea spiral.
+
+---
+
+## 🧭 The Guidance Overlay (v2.1)
+
+What if directions arrive before the corpus? Your own hunches, a GPT-generated
+list of hot topics, output from an external knowledge graph, or the plain fact
+that this round you only have one V100 — drop an optional `GUIDANCE.md` at the
+instance root, add one pointer line to `research.md`, and search & ideation
+lean that way.
+
+- **Buys attention, not verdicts**: guidance decides where to look first — what to search, what to stock. Whether a direction is good, adopted, or highly rated stays with the existing gates and evidence. Star ratings carry no weight; any claim must re-enter through the normal search → import → compile path before the wiki will cite it.
+- **Zero coupling**: no file, no change. Delete it and you exit cleanly. The protocol, commands, schemas, and lint know nothing about it — the injection carries its own contract.
+- **Auto-native**: every `/wiki-auto` stage reads `research.md` at the start, so one pointer line makes the whole unattended chain inherit the guidance — no new steps.
+- **Strong intent takes the front door**: guidance is for leanings. A direction you are sure about goes straight into the candidate list or goal adoption — a human signature is the strongest tilt there is.
+
+Two steps to enable, one to uninstall — spec and copy-paste template at [docs/GUIDANCE.md](docs/GUIDANCE.md).
 
 ---
 

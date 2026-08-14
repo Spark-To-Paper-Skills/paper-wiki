@@ -1,6 +1,6 @@
 {
   "name": "paper-wiki",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Build and maintain a faithfully cited, reverse-linked LLM Wiki from papers, PDFs, slides, and course material in Codex or Claude Code.",
   "author": {
     "name": "yiran wang",

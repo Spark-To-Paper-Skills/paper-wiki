@@ -356,7 +356,7 @@ decision_rules:
   - "a probe attached to an idea card carries kill_criterion => forbidden; idea-layer death only routes through UNDERMINED -> human final ruling (OPEN-1c; prose only, no cross-file lint this milestone)(auto 例外见 idea_lifecycle.human_only_auto_exception)"
   - "idea lands in 理论·position tier and its death is being judged => vendor itself marks the stop-loss path undecided (K5/K6 territory); this protocol does not fabricate one, defer to human ruling"
   - "任何要求给 idea 卡打绝对分或数值分的请求 => 拒绝并改用四问简版 + 四档资格判定（见 idea_tiering.absolute_score_prohibition）"
-  - "kind: openness 条目必列 papers_checked 清单(逐个 paper id,不收裸数字);清单去重条数 < 备料检查算出的邻域命中数 => 该裁决无效,重新裁决"
+  - "kind: openness 条目必列 papers_checked 清单(逐个 paper id,不收裸数字);清单去重条数 < 备料检查算出的邻域命中数 => 该裁决无效,重新裁决;verdict 落 problem-solved / partially-solved 时 papers_checked 不得为空——判「已解决」必须点名解决者;邻域命中数为 0 时前半句对数闸空转(0<0 恒假),不构成空清单豁免"
 
 state_machine:
   compile:
@@ -579,7 +579,7 @@ auto_run:
   fresh_eyes:
     principle: "决定越终局,越值得一双新眼睛——auto 运行仅两处强制换新上下文,不给每步配审"
     kill_counter_review: "机器裁决判死(RETIRED / DATA-KILLED / pivot 用尽)之前,由 fresh context 的 agent 只读卡片与相关台账做一次反方复核(往生路想);意见与证据记档、收件箱行内引用;无否决权,落笔权留在主流程;适用范围:idea 层判死用 wiki/ideas/<id>.counter.md 工件;方向层 DATA-KILLED 的反方复核以台账记档+INBOX 行内引用为形态,不要求 idea 形态工件"
-    tiering_fresh_context: "评级(idea_tiering)委派给 fresh context 执行,只喂卡片文件本身,不带本次发想过程的对话上下文——防写卡者自评通胀"
+    tiering_fresh_context: "评级(idea_tiering)委派给 fresh context 执行,只喂卡片文件本身,外加 important_problem 挂靠核验所需的 field 层锚目标文件(wiki/field/problems.md 或卡上所引 problems/<goal-id>.md;在 tiering 工件的输入白名单里明示)——锚验证是评级既有义务(interest_questions.important_problem 要求「溯源到真实记录」),不喂锚目标则该义务结构性不可执行;仍不带本次发想过程的对话上下文——防写卡者自评通胀"
     context_passing: "三条纪律:①只传落盘工件(卡/台账/案卷原文),不传工作对话;②材料白名单明示;③fresh agent 只出意见与证据,无落笔权"
     delegation_artifact_tiering: "wiki/ideas/<id>.tiering.md——评级委派工件:输入白名单+未读声明(固定句式见 unread_declaration)+四问原文+四档结论;收件箱行引用其路径;无 tiering 工件的 SCORED 视为未评级(2026-08-12 用户批准移植 GSD 纪律)"
     delegation_artifact_counter: "wiki/ideas/<id>.counter.md——判死反方复核工件:材料白名单+未读声明+反方论证;收件箱行引用其路径;无 counter 工件的判死视为未复核"
