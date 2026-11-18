@@ -14,6 +14,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script>
+var languageFromQuery = new URLSearchParams(location.search).get('lang');
+if (location.hash === '#en' || (location.hash !== '#zh' && languageFromQuery === 'en')) {
+  document.documentElement.lang = 'en';
+}
+
 // Resolve the stored theme choice (system | light | dark) before paint.
 (function () {
   var s = localStorage.getItem("pw-theme");
@@ -118,7 +123,8 @@ body {
 :root[data-theme=dark] a { color: #e8a184; }
 a { color: var(--blue-deep); }
 
-[data-lang="en"] { display: none; }
+html[lang="zh-CN"] [data-lang="en"],
+html[lang="en"] [data-lang="zh"] { display: none; }
 
 /* ── Topbar ─────────────────────────────── */
 .topbar {
@@ -322,19 +328,19 @@ a.hero-news:hover { border-color: var(--blue); }
     </button>
     <nav class="nav-links">
       <a href="#concept" data-lang="zh">核心理念</a>
-      <a href="#concept" data-lang="en">Concept</a>
+      <a href="?lang=en#concept" data-lang="en">Concept</a>
       <a href="#auto" data-lang="zh">自动流水线</a>
-      <a href="#auto" data-lang="en">Auto Pipeline</a>
+      <a href="?lang=en#auto" data-lang="en">Auto Pipeline</a>
       <a href="#guidance" data-lang="zh">外部引导</a>
-      <a href="#guidance" data-lang="en">Guidance</a>
+      <a href="?lang=en#guidance" data-lang="en">Guidance</a>
       <a href="./workflow.html" data-lang="zh">流程图</a>
-      <a href="./workflow.html" data-lang="en">Workflow</a>
+      <a href="./workflow.html#en" data-lang="en">Workflow</a>
       <a href="#install" data-lang="zh">安装</a>
-      <a href="#install" data-lang="en">Install</a>
+      <a href="?lang=en#install" data-lang="en">Install</a>
       <a href="#commands" data-lang="zh">命令</a>
-      <a href="#commands" data-lang="en">Commands</a>
+      <a href="?lang=en#commands" data-lang="en">Commands</a>
       <a href="#walkthrough" data-lang="zh">场景走读</a>
-      <a href="#walkthrough" data-lang="en">Walkthroughs</a>
+      <a href="?lang=en#walkthrough" data-lang="en">Walkthroughs</a>
       <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.md" data-lang="zh">README</a>
       <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.en.md" data-lang="en">README</a>
       <a class="gh" href="https://github.com/Spark-To-Paper-Skills/paper-wiki" target="_blank" rel="noopener">
@@ -342,8 +348,8 @@ a.hero-news:hover { border-color: var(--blue); }
         GitHub
       </a>
       <div class="lang-switch">
-        <button id="btn-zh" class="active" onclick="setLang('zh')">中文</button>
-        <button id="btn-en" onclick="setLang('en')">EN</button>
+        <button id="btn-zh" class="active" aria-pressed="true" onclick="setLang('zh')">中文</button>
+        <button id="btn-en" aria-pressed="false" onclick="setLang('en')">EN</button>
       </div>
       <button class="theme-toggle" id="theme-toggle" aria-label="Theme" title="Theme: system / light / dark" onclick="cycleTheme()">
         <svg class="icon-sys" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
@@ -477,7 +483,7 @@ a.hero-news:hover { border-color: var(--blue); }
       <div class="step" data-lang="en"><strong>Fail closed</strong><p>Unmet preconditions mean a clean stop: uninitialized instance, scope fence without <code>expansion_mode: auto</code>, busy or missing GPU — no forcing, never a CPU fallback.</p></div>
     </div>
     <div class="tip" data-lang="zh"><strong>想看整条链子长什么样？</strong>流程架构图把外层知识回路和内层想法回路摊在一张图上，标出每个环节由谁执行、哪几处由人拍板 —— <a href="./workflow.html" style="font-weight:700">打开流程架构图 →</a></div>
-    <div class="tip" data-lang="en"><strong>Want to see the whole chain?</strong> The workflow diagram lays the outer knowledge loop and the inner idea loop on one page, marking who runs each stage and where a human decides — <a href="./workflow.html" style="font-weight:700">open the workflow diagram →</a></div>
+    <div class="tip" data-lang="en"><strong>Want to see the whole chain?</strong> The workflow diagram lays the outer knowledge loop and the inner idea loop on one page, marking who runs each stage and where a human decides — <a href="./workflow.html#en" style="font-weight:700">open the workflow diagram →</a></div>
   </section>
   </div>
 
@@ -863,7 +869,7 @@ codex plugin add paper-wiki@paper-wiki</code></pre></div>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki">GitHub</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.en.md">README</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/TUTORIAL.md">Tutorial</a>
-    <span class="footer-sep"></span><a href="./workflow.html">Workflow</a>
+    <span class="footer-sep"></span><a href="./workflow.html#en">Workflow</a>
     <div class="org-line">✨ From the <a href="https://github.com/Spark-To-Paper-Skills">Spark-To-Paper-Skills</a> org<span class="footer-sep"></span>sister project: <a href="https://spark-to-paper-skills.github.io/spark-to-paper-skills/">spark-to-paper-skills</a> (one spark in, one paper out)</div>
     <div class="org-line">📖 <a href="https://github.com/mattpocock/skills/tree/main/skills/productivity/teach">mattpocock/skills — teach</a>: inspired the wiki + teach integration<span class="footer-sep"></span>Thanks to the early adopters and internal testers</div>
     <div class="org-line"><i>Papers in. Graph out. Ideas come back rated.</i></div>
@@ -875,16 +881,27 @@ var README_URLS = {
   zh: 'https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.md',
   en: 'https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.en.md'
 };
-function setLang(lang) {
-  document.querySelectorAll('[data-lang]').forEach(function(el) {
-    el.style.display = el.getAttribute('data-lang') === lang ? '' : 'none';
+function applyLanguage(lang) {
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+  ['zh', 'en'].forEach(function(code) {
+    var button = document.getElementById('btn-' + code);
+    button.classList.toggle('active', lang === code);
+    button.setAttribute('aria-pressed', String(lang === code));
   });
-  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-  document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
-  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
   var heroReadme = document.getElementById('hero-readme');
-  if (heroReadme) heroReadme.href = README_URLS[lang];
-  history.replaceState(null, '', '#' + lang);
+  heroReadme.href = README_URLS[lang];
+  document.querySelector('.hero-news').href = lang === 'en' ? '?lang=en#guidance' : '#guidance';
+}
+function setLang(lang) {
+  applyLanguage(lang);
+  var url = new URL(location.href);
+  if (url.hash && url.hash !== '#en' && url.hash !== '#zh') {
+    url.searchParams.set('lang', lang);
+  } else {
+    url.searchParams.delete('lang');
+    url.hash = lang;
+  }
+  history.replaceState(null, '', url);
 }
 function copyCode(btn) {
   var block = btn.closest('.code-block') || btn.closest('.hero-install');
@@ -931,7 +948,7 @@ if (window.matchMedia) {
   onScroll();
 })();
 
-setLang(location.hash === '#en' ? 'en' : 'zh');
+applyLanguage(document.documentElement.lang === 'en' ? 'en' : 'zh');
 </script>
 </body>
 </html>
