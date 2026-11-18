@@ -14,6 +14,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script>
+var languageFromQuery = new URLSearchParams(location.search).get('lang');
+if (location.hash === '#en' || (location.hash !== '#zh' && languageFromQuery === 'en')) {
+  document.documentElement.lang = 'en';
+}
+
 // Resolve the stored theme choice (system | light | dark) before paint.
 (function () {
   var s = localStorage.getItem("pw-theme");
@@ -170,7 +175,8 @@ body {
 :root[data-theme=dark] a { color: #e8a184; }
 a { color: var(--blue-deep); }
 
-[data-lang="en"] { display: none; }
+html[lang="zh-CN"] [data-lang="en"],
+html[lang="en"] [data-lang="zh"] { display: none; }
 
 /* ── Topbar ─────────────────────────────── */
 .topbar {
@@ -406,19 +412,19 @@ a { color: var(--blue-deep); }
     </button>
     <nav class="nav-links">
       <a href="./index.html#concept" data-lang="zh">核心理念</a>
-      <a href="./index.html#concept" data-lang="en">Concept</a>
+      <a href="./index.html?lang=en#concept" data-lang="en">Concept</a>
       <a href="./index.html#auto" data-lang="zh">自动流水线</a>
-      <a href="./index.html#auto" data-lang="en">Auto Pipeline</a>
+      <a href="./index.html?lang=en#auto" data-lang="en">Auto Pipeline</a>
       <a href="./index.html#guidance" data-lang="zh">外部引导</a>
-      <a href="./index.html#guidance" data-lang="en">Guidance</a>
+      <a href="./index.html?lang=en#guidance" data-lang="en">Guidance</a>
       <a href="./workflow.html" aria-current="page" data-lang="zh">流程图</a>
-      <a href="./workflow.html" aria-current="page" data-lang="en">Workflow</a>
+      <a href="./workflow.html#en" aria-current="page" data-lang="en">Workflow</a>
       <a href="./index.html#install" data-lang="zh">安装</a>
-      <a href="./index.html#install" data-lang="en">Install</a>
+      <a href="./index.html?lang=en#install" data-lang="en">Install</a>
       <a href="./index.html#commands" data-lang="zh">命令</a>
-      <a href="./index.html#commands" data-lang="en">Commands</a>
+      <a href="./index.html?lang=en#commands" data-lang="en">Commands</a>
       <a href="./index.html#walkthrough" data-lang="zh">场景走读</a>
-      <a href="./index.html#walkthrough" data-lang="en">Walkthroughs</a>
+      <a href="./index.html?lang=en#walkthrough" data-lang="en">Walkthroughs</a>
       <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.md" data-lang="zh">README</a>
       <a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.en.md" data-lang="en">README</a>
       <a class="gh" href="https://github.com/Spark-To-Paper-Skills/paper-wiki" target="_blank" rel="noopener">
@@ -426,8 +432,8 @@ a { color: var(--blue-deep); }
         GitHub
       </a>
       <div class="lang-switch">
-        <button id="btn-zh" class="active" onclick="setLang('zh')">中文</button>
-        <button id="btn-en" onclick="setLang('en')">EN</button>
+        <button id="btn-zh" class="active" aria-pressed="true" onclick="setLang('zh')">中文</button>
+        <button id="btn-en" aria-pressed="false" onclick="setLang('en')">EN</button>
       </div>
       <button class="theme-toggle" id="theme-toggle" aria-label="Theme" title="Theme: system / light / dark" onclick="cycleTheme()">
         <svg class="icon-sys" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
@@ -814,9 +820,9 @@ a { color: var(--blue-deep); }
     </div>
     <div class="back-links">
       <a href="./index.html" data-lang="zh">← 回到 paper-wiki 首页</a>
-      <a href="./index.html" data-lang="en">← Back to paper-wiki home</a>
+      <a href="./index.html#en" data-lang="en">← Back to paper-wiki home</a>
       <a href="./index.html#auto" data-lang="zh">/wiki-auto 自动流水线 →</a>
-      <a href="./index.html#auto" data-lang="en">The /wiki-auto pipeline →</a>
+      <a href="./index.html?lang=en#auto" data-lang="en">The /wiki-auto pipeline →</a>
     </div>
   </section>
   </div>
@@ -837,7 +843,7 @@ a { color: var(--blue-deep); }
   <div data-lang="en">
     <strong style="color:var(--ink2)">paper-wiki</strong>
     <span class="footer-sep"></span>MIT License
-    <span class="footer-sep"></span><a href="./index.html">Home</a>
+    <span class="footer-sep"></span><a href="./index.html#en">Home</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki">GitHub</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/README.en.md">README</a>
     <span class="footer-sep"></span><a href="https://github.com/Spark-To-Paper-Skills/paper-wiki/blob/main/docs/TUTORIAL.md">Tutorial</a>
@@ -848,15 +854,26 @@ a { color: var(--blue-deep); }
 
 <script>
 var PAGE_TITLES = { zh: '流程架构 · paper-wiki', en: 'Workflow · paper-wiki' };
-function setLang(lang) {
-  document.querySelectorAll('[data-lang]').forEach(function(el) {
-    el.style.display = el.getAttribute('data-lang') === lang ? '' : 'none';
+function applyLanguage(lang) {
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+  ['zh', 'en'].forEach(function(code) {
+    var button = document.getElementById('btn-' + code);
+    button.classList.toggle('active', lang === code);
+    button.setAttribute('aria-pressed', String(lang === code));
   });
-  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-  document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
-  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
   document.title = PAGE_TITLES[lang];
-  history.replaceState(null, '', '#' + lang);
+  document.querySelector('.brand').href = lang === 'en' ? './index.html#en' : './index.html';
+}
+function setLang(lang) {
+  applyLanguage(lang);
+  var url = new URL(location.href);
+  if (url.hash && url.hash !== '#en' && url.hash !== '#zh') {
+    url.searchParams.set('lang', lang);
+  } else {
+    url.searchParams.delete('lang');
+    url.hash = lang;
+  }
+  history.replaceState(null, '', url);
 }
 
 /* Theme: three-way cycle system → light → dark, persisted; respects prefers-color-scheme in system mode. */
@@ -893,7 +910,7 @@ if (window.matchMedia) {
   onScroll();
 })();
 
-setLang(location.hash === '#en' ? 'en' : 'zh');
+applyLanguage(document.documentElement.lang === 'en' ? 'en' : 'zh');
 </script>
 </body>
 </html>
